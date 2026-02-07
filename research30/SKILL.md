@@ -58,51 +58,120 @@ The script outputs a **flat ranked list** sorted by score (0-100). Each item inc
 
 4. **Note source diversity** — A finding reported across OpenAlex, PubMed, AND Semantic Scholar is higher confidence than one from a single source.
 
-## Step 3: Present the synthesis
+## Step 3: Save the full synthesis to a file
+
+**IMPORTANT:** Always save the full synthesis before showing anything to the user.
+
+1. Create the reports directory:
+```bash
+mkdir -p ~/.local/share/research30/reports
+```
+
+2. Generate a filename from the topic: lowercase, replace spaces/special chars with hyphens, append today's date. Example: `crispr-gene-editing-2026-02-07.md`
+
+3. Use the Write tool to save the **full synthesis** (using the format below) to:
+   `~/.local/share/research30/reports/{slug}-{date}.md`
+
+### Full synthesis format (saved to file):
 
 ```markdown
-## Recent Research: {TOPIC} (Last 30 Days)
+# Recent Research: {TOPIC}
+*{date range} | Generated {today's date}*
 
-**Summary:** [2-3 sentence overview of the research landscape — what are scientists actively working on? Any breakthroughs or shifts?]
+## Summary
+[2-3 sentence overview of the research landscape — what are scientists actively working on? Any breakthroughs or shifts?]
 
-**Key Findings:**
+## Key Findings
 
-1. [Major finding with specific paper reference(s)]
-   - What: [what was discovered/demonstrated]
-   - Why it matters: [significance]
+### 1. [Major finding]
+[What was discovered/demonstrated. Reference specific papers by title.]
+**Why it matters:** [significance]
 
-2. [Second finding...]
+### 2. [Second finding]
+...
 
-3. [Third finding...]
+### 3. [Third finding]
+...
 
-**Active Research Fronts:**
-- [Theme 1: brief description with paper references]
-- [Theme 2: brief description with paper references]
+## Active Research Fronts
+- **[Theme 1]:** [brief description with paper references]
+- **[Theme 2]:** [brief description with paper references]
 
-**Notable Methods/Tools:**
+## Notable Methods & Tools
 - [New method or tool, if any emerged from the abstracts]
 
-**Gaps & Opportunities:**
+## Gaps & Opportunities
 - [What's underrepresented or missing from current research]
+
+## Top Papers
+[List the top 10 papers by score with title, source, date, URL, and a one-line description of what it contributes]
 
 ---
 *Based on {N} papers from {sources}. Scores reflect relevance + recency + academic signals.*
 ```
 
 Key principles for synthesis:
-- **Be specific.** Reference actual papers by number from the ranked list (e.g., "Paper #3 demonstrates...").
-- **Synthesize, don't summarize.** Don't just list papers — identify patterns, contradictions, and trends across them.
+- **Be specific.** Reference actual papers by title.
+- **Synthesize, don't summarize.** Identify patterns, contradictions, and trends across papers.
 - **Prioritize by score but verify with abstracts.** A score of 85 means high relevance + recency + academic signal, but the abstract tells you *what* is relevant.
-- **Flag limitations.** If the results are sparse (few items) or heavily weighted to one source, note this.
+- **Flag limitations.** If results are sparse or heavily weighted to one source, note this.
+
+## Step 4: Append to the research log
+
+Append a summary entry to `~/.local/share/research30/research-log.md`. This builds a cumulative research journal over time.
+
+Use the Read tool to read the existing log (if it exists), then use the Write tool to write the full content back with the new entry appended at the top (after the header). If the file doesn't exist, create it with a header.
+
+### Log entry format:
+
+```markdown
+---
+### {date}: {TOPIC}
+**Sources:** {source summary} ({N} total)
+**Summary:** [1-2 sentence summary]
+**Key findings:** [finding 1] | [finding 2] | [finding 3]
+**Report:** `~/.local/share/research30/reports/{slug}-{date}.md`
+```
+
+## Step 5: Show a brief summary in chat
+
+Do NOT show the full synthesis in chat. Instead, show a **concise summary** (15 lines max):
+
+```markdown
+## {TOPIC} — Last 30 Days
+
+[2-3 sentence summary]
+
+**Key findings:**
+1. [One-line finding]
+2. [One-line finding]
+3. [One-line finding]
+
+**{N} papers** from {sources} | Top score: {max}
+
+Full report saved to `~/.local/share/research30/reports/{slug}-{date}.md`
+```
+
+## Step 6: Offer follow-up actions
+
+After the summary, ask what the user wants to do next:
+
+> **What next?**
+> - "deep dive on [finding]" — expand on a specific finding with paper details
+> - "compare methods" — compare approaches across the top papers
+> - "top papers" — show the full top 10 list with abstracts
+> - "search [related topic]" — run a new search on a related area
+> - "open report" — show the full saved report
 
 ## Follow-up Mode
 
-After showing the synthesis:
-- Answer follow-up questions from the research findings
-- If asked about a specific paper, provide details from the data
-- If asked about implementations, highlight HuggingFace models/datasets
-- If asked to go deeper, re-run with `--deep` or a more specific topic
-- Only run new research if the user asks about a DIFFERENT topic
+When the user requests a follow-up:
+- **Deep dive:** Pull details from the raw script output for the relevant papers. Show titles, full abstracts, URLs, and how they connect.
+- **Compare methods:** Identify methodological approaches across papers and compare.
+- **Top papers:** Show the top 10 from the script output with full abstract snippets.
+- **Related search:** Run a new `/research30` search with the new topic.
+- **Open report:** Use the Read tool to display the saved report file.
+- Only run new research if the user asks about a DIFFERENT topic.
 
 ## Optional Setup
 
