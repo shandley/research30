@@ -17,7 +17,7 @@ def ensure_output_dir():
 def _assess_data_freshness(report: schema.Report) -> dict:
     """Assess how much data is actually from the last 30 days."""
     counts = {}
-    for src in ('biorxiv', 'medrxiv', 'arxiv', 'pubmed', 'huggingface'):
+    for src in ('biorxiv', 'medrxiv', 'arxiv', 'pubmed', 'huggingface', 'openalex'):
         items = getattr(report, src, [])
         recent = sum(1 for i in items if i.date and i.date >= report.range_from)
         counts[src] = {'recent': recent, 'total': len(items)}
@@ -68,6 +68,9 @@ def render_compact(report: schema.Report, limit: int = 15) -> str:
 
     # HuggingFace
     _render_huggingface_section(lines, report.huggingface, report.huggingface_error, limit)
+
+    # OpenAlex
+    _render_openalex_section(lines, report.openalex, report.openalex_error, limit)
 
     return "\n".join(lines)
 
@@ -227,6 +230,42 @@ def _render_huggingface_section(
             lines.append("")
 
 
+def _render_openalex_section(
+    lines: List[str],
+    items: List[schema.OpenAlexItem],
+    error: Optional[str],
+    limit: int,
+):
+    """Render OpenAlex section."""
+    if error:
+        lines.append("### OpenAlex Works")
+        lines.append("")
+        lines.append(f"**ERROR:** {error}")
+        lines.append("")
+        return
+
+    if not items:
+        return
+
+    lines.append("### OpenAlex Works")
+    lines.append("")
+
+    for item in items[:limit]:
+        date_str = f" ({item.date})" if item.date else ""
+        source_str = f" [{item.source_name}]" if item.source_name else ""
+        cite_str = ""
+        if item.engagement and item.engagement.citation_count:
+            cite_str = f" [{item.engagement.citation_count} citations]"
+
+        lines.append(f"**{item.id}** (score:{item.score}){date_str}{source_str}{cite_str}")
+        lines.append(f"  {item.title}")
+        lines.append(f"  {item.url}")
+        if item.doi:
+            lines.append(f"  DOI: {item.doi}")
+        lines.append(f"  *{item.why_relevant}*")
+        lines.append("")
+
+
 def render_context_snippet(report: schema.Report) -> str:
     """Render reusable context snippet."""
     lines = []
@@ -239,7 +278,7 @@ def render_context_snippet(report: schema.Report) -> str:
     lines.append("")
 
     all_items = []
-    for src in ('pubmed', 'biorxiv', 'medrxiv', 'arxiv'):
+    for src in ('pubmed', 'openalex', 'biorxiv', 'medrxiv', 'arxiv'):
         for item in getattr(report, src, [])[:5]:
             all_items.append((item.score, src, item.title, item.url))
     for item in report.huggingface[:3]:
@@ -306,6 +345,24 @@ def render_full_report(report: schema.Report) -> str:
             lines.append(f"- **DOI:** {item.doi or 'N/A'}")
             lines.append(f"- **Score:** {item.score}/100")
             lines.append(f"- **URL:** {item.url}")
+            if item.abstract:
+                lines.append(f"\n> {item.abstract[:300]}...")
+            lines.append("")
+
+    if report.openalex:
+        lines.append("## OpenAlex Works")
+        lines.append("")
+        for item in report.openalex:
+            lines.append(f"### {item.title}")
+            lines.append(f"- **OpenAlex ID:** {item.openalex_id}")
+            lines.append(f"- **Date:** {item.date or 'Unknown'}")
+            lines.append(f"- **Source:** {item.source_name}")
+            lines.append(f"- **Type:** {item.work_type}")
+            lines.append(f"- **Authors:** {item.authors}")
+            lines.append(f"- **Score:** {item.score}/100")
+            lines.append(f"- **URL:** {item.url}")
+            if item.doi:
+                lines.append(f"- **DOI:** {item.doi}")
             if item.abstract:
                 lines.append(f"\n> {item.abstract[:300]}...")
             lines.append("")

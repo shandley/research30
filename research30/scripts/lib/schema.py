@@ -202,6 +202,49 @@ class HuggingFaceItem:
 
 
 @dataclass
+class OpenAlexItem:
+    """Normalized OpenAlex item."""
+    id: str
+    openalex_id: str
+    title: str
+    authors: str
+    abstract: str
+    doi: Optional[str]
+    source_name: str  # journal/repo name e.g. "Nature", "bioRxiv"
+    source_type: str  # "journal", "repository", etc.
+    work_type: str    # "article", "preprint", etc.
+    url: str
+    date: Optional[str] = None
+    date_confidence: str = "low"
+    engagement: Optional[AcademicEngagement] = None
+    relevance: float = 0.0
+    why_relevant: str = ""
+    subs: SubScores = field(default_factory=SubScores)
+    score: int = 0
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'id': self.id,
+            'openalex_id': self.openalex_id,
+            'title': self.title,
+            'authors': self.authors,
+            'abstract': self.abstract,
+            'doi': self.doi,
+            'source_name': self.source_name,
+            'source_type': self.source_type,
+            'work_type': self.work_type,
+            'url': self.url,
+            'date': self.date,
+            'date_confidence': self.date_confidence,
+            'engagement': self.engagement.to_dict() if self.engagement else None,
+            'relevance': self.relevance,
+            'why_relevant': self.why_relevant,
+            'subs': self.subs.to_dict(),
+            'score': self.score,
+        }
+
+
+@dataclass
 class Report:
     """Full research report."""
     topic: str
@@ -214,11 +257,13 @@ class Report:
     arxiv: List[ArxivItem] = field(default_factory=list)
     pubmed: List[PubmedItem] = field(default_factory=list)
     huggingface: List[HuggingFaceItem] = field(default_factory=list)
+    openalex: List[OpenAlexItem] = field(default_factory=list)
     biorxiv_error: Optional[str] = None
     medrxiv_error: Optional[str] = None
     arxiv_error: Optional[str] = None
     pubmed_error: Optional[str] = None
     huggingface_error: Optional[str] = None
+    openalex_error: Optional[str] = None
     from_cache: bool = False
     cache_age_hours: Optional[float] = None
 
@@ -236,8 +281,9 @@ class Report:
             'arxiv': [i.to_dict() for i in self.arxiv],
             'pubmed': [i.to_dict() for i in self.pubmed],
             'huggingface': [i.to_dict() for i in self.huggingface],
+            'openalex': [i.to_dict() for i in self.openalex],
         }
-        for src in ('biorxiv', 'medrxiv', 'arxiv', 'pubmed', 'huggingface'):
+        for src in ('biorxiv', 'medrxiv', 'arxiv', 'pubmed', 'huggingface', 'openalex'):
             err = getattr(self, f'{src}_error')
             if err:
                 d[f'{src}_error'] = err
@@ -327,16 +373,32 @@ class Report:
                 subs=_parse_subs(r.get('subs')), score=r.get('score', 0),
             ))
 
+        openalex_items = []
+        for r in data.get('openalex', []):
+            openalex_items.append(OpenAlexItem(
+                id=r['id'], openalex_id=r['openalex_id'], title=r['title'],
+                authors=r['authors'], abstract=r['abstract'],
+                doi=r.get('doi'), source_name=r.get('source_name', ''),
+                source_type=r.get('source_type', ''), work_type=r.get('work_type', ''),
+                url=r['url'], date=r.get('date'),
+                date_confidence=r.get('date_confidence', 'low'),
+                engagement=_parse_engagement(r.get('engagement')),
+                relevance=r.get('relevance', 0.0), why_relevant=r.get('why_relevant', ''),
+                subs=_parse_subs(r.get('subs')), score=r.get('score', 0),
+            ))
+
         return cls(
             topic=data['topic'], range_from=range_from, range_to=range_to,
             generated_at=data['generated_at'], mode=data['mode'],
             biorxiv=biorxiv_items, medrxiv=medrxiv_items,
             arxiv=arxiv_items, pubmed=pubmed_items, huggingface=hf_items,
+            openalex=openalex_items,
             biorxiv_error=data.get('biorxiv_error'),
             medrxiv_error=data.get('medrxiv_error'),
             arxiv_error=data.get('arxiv_error'),
             pubmed_error=data.get('pubmed_error'),
             huggingface_error=data.get('huggingface_error'),
+            openalex_error=data.get('openalex_error'),
             from_cache=data.get('from_cache', False),
             cache_age_hours=data.get('cache_age_hours'),
         )

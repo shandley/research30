@@ -53,6 +53,12 @@ HF_MESSAGES = [
     "Finding ML implementations...",
 ]
 
+OPENALEX_MESSAGES = [
+    "Searching OpenAlex database...",
+    "Querying OpenAlex for scholarly works...",
+    "Finding papers via OpenAlex...",
+]
+
 PROCESSING_MESSAGES = [
     "Analyzing results...",
     "Scoring and ranking papers...",
@@ -136,6 +142,7 @@ class ProgressDisplay:
             'arxiv': ARXIV_MESSAGES,
             'pubmed': PUBMED_MESSAGES,
             'huggingface': HF_MESSAGES,
+            'openalex': OPENALEX_MESSAGES,
         }
         colors = {
             'biorxiv': Colors.GREEN,
@@ -143,6 +150,7 @@ class ProgressDisplay:
             'arxiv': Colors.CYAN,
             'pubmed': Colors.YELLOW,
             'huggingface': Colors.PURPLE,
+            'openalex': Colors.GREEN,
         }
         msg = random.choice(messages.get(source, PROCESSING_MESSAGES))
         color = colors.get(source, Colors.CYAN)

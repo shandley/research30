@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from . import dates, schema
 
-T = TypeVar("T", schema.BiorxivItem, schema.ArxivItem, schema.PubmedItem, schema.HuggingFaceItem)
+T = TypeVar("T", schema.BiorxivItem, schema.ArxivItem, schema.PubmedItem, schema.HuggingFaceItem, schema.OpenAlexItem)
 
 
 def compute_keyword_relevance(topic: str, title: str, abstract: str) -> Tuple[float, str]:
@@ -238,6 +238,53 @@ def normalize_huggingface_items(
             author=item.get('author', ''),
             item_type=item.get('item_type', 'model'),
             tags=item.get('tags', []),
+            url=item.get('url', ''),
+            date=date_str,
+            date_confidence=date_confidence,
+            engagement=engagement,
+            relevance=item.get('relevance', 0.0),
+            why_relevant=item.get('why_relevant', ''),
+        ))
+
+    return normalized
+
+
+def normalize_openalex_items(
+    items: List[Dict[str, Any]],
+    from_date: str,
+    to_date: str,
+) -> List[schema.OpenAlexItem]:
+    """Normalize raw OpenAlex items to schema."""
+    normalized = []
+
+    for item in items:
+        openalex_id = item.get('openalex_id', '')
+        date_str = item.get('publication_date') or item.get('date')
+        date_confidence = dates.get_date_confidence(date_str, from_date, to_date)
+
+        doi_raw = item.get('doi')
+        author_count = None
+        authors_str = item.get('authors', '')
+        if authors_str:
+            author_count = len(authors_str.split(', '))
+
+        engagement = schema.AcademicEngagement(
+            published_doi=doi_raw,
+            published_journal=item.get('source_name') or None,
+            citation_count=item.get('cited_by_count'),
+            author_count=author_count,
+        )
+
+        normalized.append(schema.OpenAlexItem(
+            id=f"openalex:{openalex_id}",
+            openalex_id=openalex_id,
+            title=item.get('title', ''),
+            authors=authors_str,
+            abstract=item.get('abstract', ''),
+            doi=doi_raw,
+            source_name=item.get('source_name', ''),
+            source_type=item.get('source_type', ''),
+            work_type=item.get('work_type', ''),
             url=item.get('url', ''),
             date=date_str,
             date_confidence=date_confidence,

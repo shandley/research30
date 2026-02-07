@@ -1,0 +1,118 @@
+{
+  "meta": {
+    "count": 3,
+    "page": 1,
+    "per_page": 100
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W4407743506",
+      "doi": "https://doi.org/10.1038/s41586-025-00001-1",
+      "title": "Characterization of the human gut virome in health and disease",
+      "publication_date": "2025-01-15",
+      "type": "article",
+      "authorships": [
+        {"author": {"display_name": "Alice Chen"}},
+        {"author": {"display_name": "Bob Martinez"}},
+        {"author": {"display_name": "Carol Zhang"}},
+        {"author": {"display_name": "David Kim"}},
+        {"author": {"display_name": "Eva Johansson"}}
+      ],
+      "abstract_inverted_index": {
+        "The": [0],
+        "human": [1],
+        "gut": [2],
+        "virome": [3],
+        "plays": [4],
+        "a": [5],
+        "critical": [6],
+        "role": [7],
+        "in": [8, 15],
+        "health": [9],
+        "and": [10],
+        "disease.": [11],
+        "This": [12],
+        "study": [13],
+        "characterizes": [14],
+        "the": [16],
+        "diversity": [17],
+        "of": [18],
+        "viral": [19],
+        "populations.": [20]
+      },
+      "primary_location": {
+        "source": {
+          "display_name": "Nature",
+          "type": "journal"
+        }
+      },
+      "cited_by_count": 15,
+      "open_access": {"is_oa": true, "oa_url": "https://www.nature.com/articles/s41586-025-00001-1"}
+    },
+    {
+      "id": "https://openalex.org/W4407743507",
+      "doi": "https://doi.org/10.1101/2025.01.10.000001",
+      "title": "Novel bacteriophage interactions within the soil virome",
+      "publication_date": "2025-01-10",
+      "type": "preprint",
+      "authorships": [
+        {"author": {"display_name": "Frank Wilson"}},
+        {"author": {"display_name": "Grace Lee"}}
+      ],
+      "abstract_inverted_index": {
+        "Bacteriophages": [0],
+        "are": [1],
+        "key": [2],
+        "components": [3],
+        "of": [4, 9],
+        "the": [5, 14],
+        "soil": [6],
+        "virome.": [7],
+        "Analysis": [8],
+        "phage-host": [10],
+        "interactions": [11],
+        "reveals": [12],
+        "novel": [13],
+        "ecological": [15],
+        "dynamics.": [16]
+      },
+      "primary_location": {
+        "source": {
+          "display_name": "bioRxiv",
+          "type": "repository"
+        }
+      },
+      "cited_by_count": 0,
+      "open_access": {"is_oa": true}
+    },
+    {
+      "id": "https://openalex.org/W4407743508",
+      "doi": null,
+      "title": "Unrelated paper about protein folding mechanisms",
+      "publication_date": "2025-01-12",
+      "type": "article",
+      "authorships": [
+        {"author": {"display_name": "Henry Adams"}}
+      ],
+      "abstract_inverted_index": {
+        "Protein": [0],
+        "folding": [1],
+        "is": [2],
+        "a": [3],
+        "fundamental": [4],
+        "process": [5],
+        "in": [6],
+        "molecular": [7],
+        "biology.": [8]
+      },
+      "primary_location": {
+        "source": {
+          "display_name": "Science",
+          "type": "journal"
+        }
+      },
+      "cited_by_count": 5,
+      "open_access": {"is_oa": false}
+    }
+  ]
+}

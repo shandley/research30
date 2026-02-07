@@ -2,7 +2,7 @@
 """
 research30 - Search scientific literature from the last 30 days.
 
-Sources: bioRxiv, medRxiv, arXiv, PubMed, HuggingFace Hub
+Sources: OpenAlex, PubMed, arXiv, HuggingFace Hub (+ bioRxiv/medRxiv on request)
 
 Usage:
     python3 research30.py <topic> [options]
@@ -10,7 +10,7 @@ Usage:
 Options:
     --mock              Use fixtures instead of real API calls
     --emit=MODE         Output mode: compact|json|md|context|path (default: compact)
-    --sources=MODE      Source filter: all|preprints|pubmed|huggingface|biorxiv|arxiv (default: all)
+    --sources=MODE      Source filter: all|preprints|pubmed|huggingface|openalex|biorxiv|arxiv (default: all)
     --quick             Fewer results per source
     --deep              More results per source
     --debug             Enable verbose debug logging
@@ -37,6 +37,7 @@ from lib import (
     http,
     huggingface,
     normalize,
+    openalex,
     pubmed,
     render,
     schema,
@@ -107,11 +108,22 @@ def _search_huggingface(topic, from_date, to_date, depth, mock):
     return huggingface.search_huggingface(topic, from_date, to_date, depth)
 
 
+def _search_openalex(topic, from_date, to_date, depth, mock):
+    """Search OpenAlex (runs in thread)."""
+    if mock:
+        mock_data = load_fixture("openalex_sample.json")
+        if mock_data:
+            return openalex.search_openalex(topic, from_date, to_date, depth,
+                                            mock_data=mock_data.get('results', []))
+    return openalex.search_openalex(topic, from_date, to_date, depth)
+
+
 def determine_sources(requested: str) -> set:
     """Determine which sources to query."""
     source_map = {
-        'all': {'biorxiv', 'medrxiv', 'arxiv', 'pubmed', 'huggingface'},
-        'preprints': {'biorxiv', 'medrxiv', 'arxiv'},
+        'all': {'openalex', 'arxiv', 'pubmed', 'huggingface'},
+        'preprints': {'openalex', 'arxiv'},
+        'openalex': {'openalex'},
         'biorxiv': {'biorxiv'},
         'medrxiv': {'medrxiv'},
         'arxiv': {'arxiv'},
@@ -133,14 +145,15 @@ def run_research(
 ) -> dict:
     """Run the research pipeline across all sources in parallel.
 
-    Returns dict with keys: biorxiv, medrxiv, arxiv, pubmed, huggingface
-    Each value is (items, error).
+    Returns dict with source keys mapping to (items, error) tuples.
     """
     api_key = config.get('NCBI_API_KEY')
     results = {}
 
     # Build futures
     search_funcs = {}
+    if 'openalex' in sources_set:
+        search_funcs['openalex'] = lambda: _search_openalex(topic, from_date, to_date, depth, mock)
     if 'biorxiv' in sources_set:
         search_funcs['biorxiv'] = lambda: _search_biorxiv(topic, from_date, to_date, depth, mock)
     if 'medrxiv' in sources_set:
@@ -192,7 +205,7 @@ def main():
     )
     parser.add_argument(
         "--sources",
-        choices=["all", "preprints", "pubmed", "huggingface", "biorxiv", "arxiv"],
+        choices=["all", "preprints", "pubmed", "huggingface", "openalex", "biorxiv", "arxiv"],
         default="all",
         help="Source filter",
     )
@@ -255,6 +268,9 @@ def main():
     progress.start_processing()
 
     # Normalize items from each source
+    openalex_items = normalize.normalize_openalex_items(
+        raw_results.get('openalex', ([], None))[0], from_date, to_date
+    )
     biorxiv_items = normalize.normalize_biorxiv_items(
         raw_results.get('biorxiv', ([], None))[0], from_date, to_date, 'biorxiv'
     )
@@ -272,6 +288,7 @@ def main():
     )
 
     # Date filter
+    openalex_items = normalize.filter_by_date_range(openalex_items, from_date, to_date)
     biorxiv_items = normalize.filter_by_date_range(biorxiv_items, from_date, to_date)
     medrxiv_items = normalize.filter_by_date_range(medrxiv_items, from_date, to_date)
     arxiv_items = normalize.filter_by_date_range(arxiv_items, from_date, to_date)
@@ -279,6 +296,7 @@ def main():
     hf_items = normalize.filter_by_date_range(hf_items, from_date, to_date)
 
     # Score items
+    openalex_items = score.score_openalex_items(openalex_items)
     biorxiv_items = score.score_biorxiv_items(biorxiv_items)
     medrxiv_items = score.score_biorxiv_items(medrxiv_items)
     arxiv_items = score.score_arxiv_items(arxiv_items)
@@ -286,6 +304,7 @@ def main():
     hf_items = score.score_huggingface_items(hf_items)
 
     # Sort items
+    openalex_items = score.sort_items(openalex_items)
     biorxiv_items = score.sort_items(biorxiv_items)
     medrxiv_items = score.sort_items(medrxiv_items)
     arxiv_items = score.sort_items(arxiv_items)
@@ -293,6 +312,7 @@ def main():
     hf_items = score.sort_items(hf_items)
 
     # Dedupe within sources
+    openalex_items = dedupe.dedupe_within_source(openalex_items)
     biorxiv_items = dedupe.dedupe_within_source(biorxiv_items)
     medrxiv_items = dedupe.dedupe_within_source(medrxiv_items)
     arxiv_items = dedupe.dedupe_within_source(arxiv_items)
@@ -300,10 +320,11 @@ def main():
     hf_items = dedupe.dedupe_within_source(hf_items)
 
     # Cross-source dedup
-    all_items = biorxiv_items + medrxiv_items + arxiv_items + pubmed_items + hf_items
+    all_items = openalex_items + biorxiv_items + medrxiv_items + arxiv_items + pubmed_items + hf_items
     deduped_all = dedupe.dedupe_cross_source(all_items)
 
     # Rebuild per-source lists from deduped results
+    openalex_final = [i for i in deduped_all if isinstance(i, schema.OpenAlexItem)]
     biorxiv_final = [i for i in deduped_all if isinstance(i, schema.BiorxivItem) and i.source == 'biorxiv']
     medrxiv_final = [i for i in deduped_all if isinstance(i, schema.BiorxivItem) and i.source == 'medrxiv']
     arxiv_final = [i for i in deduped_all if isinstance(i, schema.ArxivItem)]
@@ -314,6 +335,7 @@ def main():
 
     # Create report
     report = schema.create_report(args.topic, from_date, to_date, args.sources)
+    report.openalex = openalex_final
     report.biorxiv = biorxiv_final
     report.medrxiv = medrxiv_final
     report.arxiv = arxiv_final
@@ -321,7 +343,7 @@ def main():
     report.huggingface = hf_final
 
     # Set per-source errors
-    for src in ('biorxiv', 'medrxiv', 'arxiv', 'pubmed', 'huggingface'):
+    for src in ('openalex', 'biorxiv', 'medrxiv', 'arxiv', 'pubmed', 'huggingface'):
         if src in raw_results:
             _, err = raw_results[src]
             if err:
@@ -336,6 +358,7 @@ def main():
 
     # Show completion
     counts = {
+        'OpenAlex': len(openalex_final),
         'bioRxiv': len(biorxiv_final),
         'medRxiv': len(medrxiv_final),
         'arXiv': len(arxiv_final),

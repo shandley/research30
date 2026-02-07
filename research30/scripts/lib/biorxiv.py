@@ -2,14 +2,17 @@
 
 API: GET https://api.biorxiv.org/details/{server}/{from_date}/{to_date}/{cursor}/json
 No keyword search — fetches by date range and filters locally.
-100 results/page, 1 req/sec rate limit.
+100 results/page. After the first sequential request reveals the total,
+remaining pages are fetched in parallel via ThreadPoolExecutor.
 """
 
-import time
+import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional, Tuple
 
 from . import http, normalize as norm_mod
 
+log = logging.getLogger(__name__)
 
 # Depth config: how many relevant matches to collect
 DEPTH_LIMITS = {
@@ -21,8 +24,31 @@ DEPTH_LIMITS = {
 # Max pages to fetch before giving up (safety valve)
 MAX_PAGES = 30
 
-# Rate limit: 1 request per second
-RATE_LIMIT_DELAY = 1.0
+# Number of concurrent workers for parallel page fetches
+PARALLEL_WORKERS = 5
+
+
+def _fetch_page(server: str, from_date: str, to_date: str, cursor: int) -> Dict[str, Any]:
+    """Fetch a single page from the preprint API. Used by the thread pool."""
+    url = f"https://api.biorxiv.org/details/{server}/{from_date}/{to_date}/{cursor}/json"
+    return http.get(url, timeout=30)
+
+
+def _filter_page(topic: str, server: str, collection: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Filter a page of results for keyword relevance."""
+    matches = []
+    for item in collection:
+        rel, why = norm_mod.compute_keyword_relevance(
+            topic,
+            item.get('title', ''),
+            item.get('abstract', ''),
+        )
+        if rel > 0.1:
+            item['relevance'] = rel
+            item['why_relevant'] = why
+            item['source'] = server
+            matches.append(item)
+    return matches
 
 
 def search_preprint_server(
@@ -35,7 +61,8 @@ def search_preprint_server(
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """Search a preprint server (biorxiv or medrxiv) for a topic.
 
-    Strategy: paginate through results, filter by keyword match on
+    Strategy: fetch first page to learn total count, then fan out
+    remaining pages in parallel. Filter by keyword match on
     title+abstract, stop early once enough relevant matches found.
 
     Args:
@@ -68,54 +95,76 @@ def search_preprint_server(
         return results[:max_relevant], None
 
     results = []
-    cursor = 0
     error = None
 
     try:
-        for _page in range(MAX_PAGES):
-            url = f"https://api.biorxiv.org/details/{server}/{from_date}/{to_date}/{cursor}/json"
+        # --- First page: sequential, to learn total count ---
+        try:
+            first_data = _fetch_page(server, from_date, to_date, 0)
+        except http.HTTPError as e:
+            return [], str(e)
 
-            try:
-                data = http.get(url, timeout=30)
-            except http.HTTPError as e:
-                error = str(e)
-                break
+        collection = first_data.get('collection', [])
+        if not collection:
+            return [], None
 
-            collection = data.get('collection', [])
-            if not collection:
-                break
+        results.extend(_filter_page(topic, server, collection))
+        if len(results) >= max_relevant:
+            return results[:max_relevant], None
 
-            # Filter by keyword relevance
-            for item in collection:
-                rel, why = norm_mod.compute_keyword_relevance(
-                    topic,
-                    item.get('title', ''),
-                    item.get('abstract', ''),
-                )
-                if rel > 0.1:
-                    item['relevance'] = rel
-                    item['why_relevant'] = why
-                    item['source'] = server
-                    results.append(item)
+        # Determine remaining cursors from the first page metadata
+        messages = first_data.get('messages', [])
+        if not messages:
+            return results[:max_relevant], None
 
-            # Check if we have enough
-            if len(results) >= max_relevant:
-                break
+        msg = messages[0]
+        total = int(msg.get('total', 0))
+        count = int(msg.get('count', 0))
+        if count >= total:
+            return results[:max_relevant], None
 
-            # Check if there are more pages
-            messages = data.get('messages', [])
-            if messages:
-                msg = messages[0]
-                total = int(msg.get('total', 0))
-                count = int(msg.get('count', 0))
-                if cursor + count >= total:
+        # Build list of cursors for remaining pages, capped at MAX_PAGES
+        remaining_cursors = []
+        c = count
+        while c < total and len(remaining_cursors) < MAX_PAGES - 1:
+            remaining_cursors.append(c)
+            c += 100  # API page size
+
+        if not remaining_cursors:
+            return results[:max_relevant], None
+
+        log.debug(
+            "%s: %d total papers, fetching %d remaining pages in parallel",
+            server, total, len(remaining_cursors),
+        )
+
+        # --- Remaining pages: parallel via ThreadPoolExecutor ---
+        with ThreadPoolExecutor(max_workers=PARALLEL_WORKERS) as pool:
+            future_to_cursor = {
+                pool.submit(_fetch_page, server, from_date, to_date, cur): cur
+                for cur in remaining_cursors
+            }
+
+            for future in as_completed(future_to_cursor):
+                cur = future_to_cursor[future]
+                try:
+                    data = future.result()
+                except http.HTTPError as e:
+                    log.debug("%s: page at cursor %d failed: %s", server, cur, e)
+                    continue
+                except Exception as e:
+                    log.debug("%s: page at cursor %d error: %s", server, cur, e)
+                    continue
+
+                page_collection = data.get('collection', [])
+                if page_collection:
+                    results.extend(_filter_page(topic, server, page_collection))
+
+                # Early stop: cancel remaining futures if we have enough
+                if len(results) >= max_relevant:
+                    for f in future_to_cursor:
+                        f.cancel()
                     break
-                cursor += count
-            else:
-                break
-
-            # Rate limit
-            time.sleep(RATE_LIMIT_DELAY)
 
     except Exception as e:
         error = f"{type(e).__name__}: {e}"

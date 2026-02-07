@@ -1,19 +1,28 @@
 # research30
 
-A Claude Code skill that searches the last 30 days of scientific literature across five sources: bioRxiv, medRxiv, arXiv, PubMed, and HuggingFace Hub.
+A Claude Code skill that searches the last 30 days of scientific literature across multiple sources, with OpenAlex as the primary discovery engine.
 
 No API keys are required. All sources use free, public APIs.
 
 ## What It Does
 
-Given a research topic, research30 queries all five sources in parallel, scores results by relevance and academic signals, removes duplicates across sources, and outputs a ranked report. The entire pipeline runs in seconds using only Python's standard library.
+Given a research topic, research30 queries all sources in parallel, scores results by relevance and academic signals, removes duplicates across sources, and outputs a ranked report. Typical queries complete in 1-2 seconds.
 
-Sources searched:
+Sources searched (default):
+- **OpenAlex** -- 250M+ scholarly works with full-text search. Covers journals, preprints (bioRxiv, medRxiv), conference papers, and more. This is the primary discovery source.
 - **PubMed** -- peer-reviewed journal articles via NCBI E-utilities
-- **bioRxiv** -- biology preprints
-- **medRxiv** -- medical/clinical preprints
 - **arXiv** -- physics, math, CS, and quantitative biology preprints
 - **HuggingFace Hub** -- ML models, datasets, and daily papers
+
+Additional sources (available on request):
+- **bioRxiv** -- biology preprints (direct API, slower due to full pagination)
+- **medRxiv** -- medical/clinical preprints (direct API, slower due to full pagination)
+
+### Why OpenAlex?
+
+The bioRxiv/medRxiv APIs have no keyword search -- querying them requires paginating through *every* paper in the 30-day window and filtering locally. For a topic like "virome", this meant downloading 4,700+ papers (~15MB of JSON) just to find a handful of matches.
+
+OpenAlex indexes the same preprints (plus journals, conference papers, and more) with full-text search. One API call returns relevant results pre-ranked, completing in under 2 seconds instead of minutes. bioRxiv and medRxiv remain available via `--sources=biorxiv` or `--sources=medrxiv` for direct access when needed.
 
 ## Installation
 
@@ -55,7 +64,7 @@ python3 scripts/research30.py <topic> [options]
 | Flag | Description |
 |------|-------------|
 | `--emit=MODE` | Output format: `compact` (default), `json`, `md`, `context`, `path` |
-| `--sources=MODE` | Filter sources: `all` (default), `preprints`, `pubmed`, `huggingface`, `biorxiv`, `arxiv` |
+| `--sources=MODE` | Filter sources: `all` (default), `preprints`, `pubmed`, `huggingface`, `openalex`, `biorxiv`, `arxiv` |
 | `--quick` | Fewer results per source, faster execution |
 | `--deep` | More results per source, thorough search |
 | `--debug` | Print verbose HTTP logs to stderr |
@@ -81,27 +90,33 @@ Get results as JSON:
 python3 scripts/research30.py "protein folding" --emit=json
 ```
 
-Quick scan of preprint servers:
+Quick scan of preprints via OpenAlex:
 
 ```bash
 python3 scripts/research30.py "single-cell transcriptomics" --sources=preprints --quick
+```
+
+Use the direct bioRxiv API if needed:
+
+```bash
+python3 scripts/research30.py "virome" --sources=biorxiv
 ```
 
 ## How Scoring Works
 
 Each result is scored 0-100 based on three signals:
 
-**For papers (bioRxiv, medRxiv, arXiv, PubMed):**
+**For papers (OpenAlex, bioRxiv, medRxiv, arXiv, PubMed):**
 - 50% keyword relevance (title match weighted 2x over abstract)
 - 25% recency (newer papers score higher)
-- 25% academic signal (peer review status, journal, author count)
+- 25% academic signal (peer review status, citations, journal, author count)
 
 **For HuggingFace items (models, datasets, papers):**
 - 45% keyword relevance
 - 25% recency
 - 30% academic signal (downloads, likes)
 
-Papers that appear in multiple sources (e.g., a bioRxiv preprint that was later published in a journal indexed by PubMed) are deduplicated. The version from the higher-priority source is kept: PubMed > bioRxiv > medRxiv > arXiv > HuggingFace.
+Papers that appear in multiple sources (e.g., a preprint found via OpenAlex that was also published in PubMed) are deduplicated. The version from the higher-priority source is kept: PubMed > OpenAlex > bioRxiv > medRxiv > arXiv > HuggingFace.
 
 ## Optional Configuration
 
@@ -133,7 +148,7 @@ Results are written to `~/.local/share/research30/out/`:
 - `report.md` -- formatted markdown report
 - `context.md` -- condensed context snippet
 
-Results are cached for 24 hours at `~/.cache/research30/`. Run with `--refresh` or delete the cache directory to force fresh queries.
+Results are cached for 24 hours at `~/.cache/research30/`. Delete the cache directory to force fresh queries.
 
 ## Running Tests
 
@@ -152,8 +167,9 @@ research30/
   scripts/
     research30.py       -- Main entry point and orchestrator
     lib/
-      schema.py         -- Data models (BiorxivItem, ArxivItem, PubmedItem, etc.)
-      biorxiv.py        -- bioRxiv and medRxiv API client
+      schema.py         -- Data models (OpenAlexItem, BiorxivItem, ArxivItem, etc.)
+      openalex.py       -- OpenAlex API client (primary source)
+      biorxiv.py        -- bioRxiv and medRxiv API client (parallel pagination)
       arxiv.py          -- arXiv API client
       pubmed.py         -- PubMed E-utilities client
       huggingface.py    -- HuggingFace Hub API client
@@ -167,7 +183,7 @@ research30/
       dates.py          -- Date utilities
       env.py            -- Configuration loading
       ui.py             -- Terminal progress display
-  tests/                -- Unit tests (54 tests)
+  tests/                -- Unit tests (63 tests)
   fixtures/             -- Mock API responses for testing
 ```
 
