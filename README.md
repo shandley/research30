@@ -1,6 +1,6 @@
 # research30
 
-A Claude Code skill that searches the last 30 days of scientific literature and synthesizes findings. No API keys required.
+A skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Anthropic's CLI coding agent) that searches the last 30 days of scientific literature and synthesizes findings. No API keys required.
 
 ```
 /research30 CRISPR gene editing
@@ -12,7 +12,7 @@ Claude searches 5 academic databases in parallel, scores and deduplicates result
 
 ## Quick Start
 
-**Prerequisites:** Python 3.8+ (no pip packages needed — stdlib only)
+**Prerequisites:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and Python 3.8+ (no pip packages needed — stdlib only)
 
 **1. Clone the repo:**
 
@@ -21,27 +21,32 @@ git clone https://github.com/shandley/research30.git
 cd research30
 ```
 
-**2. Install the skill:**
+**2. Install the skill (run from the repo root):**
 
 ```bash
-# Symlink into Claude Code's skills directory
 mkdir -p ~/.claude/skills
 ln -s "$(pwd)/research30" ~/.claude/skills/research30
 ```
 
+This creates a symlink so the skill stays in sync with the repo. The `$(pwd)` must expand to the repo root (the directory containing `research30/`, `README.md`, etc.).
+
 **3. Use it:**
 
-Restart Claude Code, then:
+Start a new Claude Code session (skills are loaded at startup), then:
 
 ```
 /research30 your topic here
 ```
 
-Or run standalone without Claude Code:
+This works from any directory — the skill is globally installed.
+
+**Standalone (no Claude Code):** You can also run the script directly from the repo root:
 
 ```bash
 python3 research30/scripts/research30.py "your topic here"
 ```
+
+This outputs the raw ranked list. Claude Code adds the synthesis layer on top.
 
 ## What It Searches
 
