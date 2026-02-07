@@ -145,6 +145,49 @@ def test_normalize_huggingface_items():
     assert item.engagement.likes == 42
 
 
+def test_bigram_matching_boosts_consecutive_words():
+    """Test that consecutive topic words appearing together get a bonus."""
+    # "labor market" as a bigram should score higher than "labor" + "AI" separately
+    score_with_bigram, why1 = normalize.compute_keyword_relevance(
+        "labor market AI impacts",
+        "Effects on the labor market from automation",
+        "Analysis of labor market disruptions",
+    )
+    score_without_bigram, why2 = normalize.compute_keyword_relevance(
+        "labor market AI impacts",
+        "Labor relations in AI systems",
+        "A study of labor in industrial settings",
+    )
+    assert score_with_bigram > score_without_bigram
+    assert "bigram" in why1.lower()
+
+
+def test_bigram_matching_single_word_topic():
+    """Test that single-word topics don't crash on bigram matching."""
+    score, why = normalize.compute_keyword_relevance(
+        "CRISPR",
+        "CRISPR in cells",
+        "About CRISPR editing",
+    )
+    assert score > 0
+    assert "bigram" not in why.lower()
+
+
+def test_bigram_matching_two_word_topic():
+    """Test bigram matching works with two-word topics."""
+    score_match, _ = normalize.compute_keyword_relevance(
+        "gene editing",
+        "Advances in gene editing technology",
+        "",
+    )
+    score_split, _ = normalize.compute_keyword_relevance(
+        "gene editing",
+        "Gene therapy and video editing tools",
+        "",
+    )
+    assert score_match > score_split
+
+
 def test_filter_by_date_range():
     """Test date filtering."""
     items = [

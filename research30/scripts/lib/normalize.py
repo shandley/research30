@@ -8,11 +8,29 @@ from . import dates, schema
 T = TypeVar("T", schema.BiorxivItem, schema.ArxivItem, schema.PubmedItem, schema.HuggingFaceItem, schema.OpenAlexItem, schema.SemanticScholarItem)
 
 
+def _count_bigram_matches(topic_words: list, text: str) -> int:
+    """Count how many consecutive topic word pairs appear together in text.
+
+    For topic "labor market AI impacts", bigrams are:
+    "labor market", "market ai", "ai impacts".
+    Each bigram found in text counts as a match.
+    """
+    if len(topic_words) < 2:
+        return 0
+    text_lower = text.lower()
+    count = 0
+    for i in range(len(topic_words) - 1):
+        bigram = f"{topic_words[i]} {topic_words[i+1]}"
+        if bigram in text_lower:
+            count += 1
+    return count
+
+
 def compute_keyword_relevance(topic: str, title: str, abstract: str) -> Tuple[float, str]:
     """Compute keyword relevance score from topic against title+abstract.
 
     Tokenizes topic into words, matches against title (2x weight) + abstract (1x).
-    Boosts for exact phrase match and all-words-present.
+    Boosts for exact phrase match, bigram matches, and all-words-present.
 
     Returns:
         Tuple of (score 0.0-1.0, explanation string)
@@ -55,6 +73,22 @@ def compute_keyword_relevance(topic: str, title: str, abstract: str) -> Tuple[fl
         reasons.append(f"{title_word_matches}/{len(topic_words)} words in title")
     if abstract_word_matches > 0:
         reasons.append(f"{abstract_word_matches}/{len(topic_words)} words in abstract")
+
+    # Bigram matching — consecutive topic words appearing together
+    # This rewards "labor market" over "labor" + unrelated "market"
+    if len(topic_words) >= 2:
+        max_bigrams = len(topic_words) - 1
+        title_bigrams = _count_bigram_matches(topic_words, title_lower)
+        abstract_bigrams = _count_bigram_matches(topic_words, abstract_lower)
+        bigram_ratio = max(
+            title_bigrams / max_bigrams,
+            abstract_bigrams / max_bigrams * 0.5,
+        )
+        bigram_bonus = bigram_ratio * 0.15
+        score += bigram_bonus
+        total_bigrams = max(title_bigrams, abstract_bigrams)
+        if total_bigrams > 0:
+            reasons.append(f"{total_bigrams}/{max_bigrams} bigrams matched")
 
     # All-words-present bonus
     all_in_title = title_word_matches == len(topic_words)

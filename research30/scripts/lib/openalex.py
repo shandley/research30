@@ -176,7 +176,7 @@ def search_openalex(
 
     if mock_data is not None:
         results = []
-        for work in mock_data:
+        for rank, work in enumerate(mock_data):
             abstract = work.get('abstract') or _reconstruct_abstract(
                 work.get('abstract_inverted_index')
             )
@@ -186,6 +186,11 @@ def search_openalex(
                 abstract,
             )
             if rel > 0.1:
+                # Boost relevance based on API rank — OpenAlex returns
+                # results sorted by its own full-text relevance scoring.
+                # Top results get up to +0.1 boost, decaying over positions.
+                position_boost = max(0.0, 0.1 * (1 - rank / max(len(mock_data), 1)))
+                boosted_rel = min(1.0, rel + position_boost)
                 source_name, source_type = _extract_source(work.get('primary_location'))
                 doi = _extract_doi(work.get('doi'))
                 primary_topic = work.get('primary_topic') or {}
@@ -201,7 +206,7 @@ def search_openalex(
                     'work_type': work.get('type', ''),
                     'cited_by_count': work.get('cited_by_count', 0),
                     'url': _build_url(work),
-                    'relevance': rel,
+                    'relevance': boosted_rel,
                     'why_relevant': why,
                     'source': 'openalex',
                     'primary_topic_name': primary_topic.get('display_name', ''),
@@ -227,7 +232,10 @@ def search_openalex(
             if not works:
                 break
 
-            for work in works:
+            # Global rank across pages for position-based boost
+            page_start_rank = (page_num - 1) * PAGE_SIZE
+            for idx, work in enumerate(works):
+                global_rank = page_start_rank + idx
                 abstract = _reconstruct_abstract(work.get('abstract_inverted_index'))
                 rel, why = norm_mod.compute_keyword_relevance(
                     topic,
@@ -235,6 +243,10 @@ def search_openalex(
                     abstract,
                 )
                 if rel > 0.1:
+                    # Boost relevance based on API rank — OpenAlex returns
+                    # results sorted by its own full-text relevance scoring.
+                    position_boost = max(0.0, 0.1 * (1 - global_rank / max_results))
+                    boosted_rel = min(1.0, rel + position_boost)
                     source_name, source_type = _extract_source(work.get('primary_location'))
                     doi = _extract_doi(work.get('doi'))
                     primary_topic = work.get('primary_topic') or {}
@@ -250,7 +262,7 @@ def search_openalex(
                         'work_type': work.get('type', ''),
                         'cited_by_count': work.get('cited_by_count', 0),
                         'url': _build_url(work),
-                        'relevance': rel,
+                        'relevance': boosted_rel,
                         'why_relevant': why,
                         'source': 'openalex',
                         'primary_topic_name': primary_topic.get('display_name', ''),

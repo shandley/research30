@@ -98,13 +98,17 @@ def search_semantic_scholar(
 
     if mock_data is not None:
         results = []
-        for paper in mock_data:
+        for rank, paper in enumerate(mock_data):
             rel, why = norm_mod.compute_keyword_relevance(
                 topic,
                 paper.get('title', ''),
                 paper.get('abstract', ''),
             )
             if rel > RELEVANCE_THRESHOLD:
+                # Boost relevance based on API rank — S2 uses semantic
+                # embedding search, so top results are conceptually closest.
+                position_boost = max(0.0, 0.1 * (1 - rank / max(len(mock_data), 1)))
+                boosted_rel = min(1.0, rel + position_boost)
                 ext_ids = paper.get('externalIds', {}) or {}
                 authors = paper.get('authors', [])
                 pub_types = paper.get('publicationTypes') or []
@@ -121,7 +125,7 @@ def search_semantic_scholar(
                     'publication_date': paper.get('publicationDate'),
                     'url': _build_url(paper),
                     'external_ids': ext_ids,
-                    'relevance': rel,
+                    'relevance': boosted_rel,
                     'why_relevant': why,
                     'source': 'semanticscholar',
                 })
@@ -157,7 +161,8 @@ def search_semantic_scholar(
             if not papers:
                 break
 
-            for paper in papers:
+            for idx, paper in enumerate(papers):
+                global_rank = offset + idx
                 abstract = paper.get('abstract', '') or ''
                 rel, why = norm_mod.compute_keyword_relevance(
                     topic,
@@ -165,6 +170,10 @@ def search_semantic_scholar(
                     abstract,
                 )
                 if rel > RELEVANCE_THRESHOLD:
+                    # Boost relevance based on API rank — S2 uses semantic
+                    # embedding search, so top results are conceptually closest.
+                    position_boost = max(0.0, 0.1 * (1 - global_rank / max_results))
+                    boosted_rel = min(1.0, rel + position_boost)
                     ext_ids = paper.get('externalIds', {}) or {}
                     authors = paper.get('authors', [])
                     pub_types = paper.get('publicationTypes') or []
@@ -187,7 +196,7 @@ def search_semantic_scholar(
                         'publication_date': paper.get('publicationDate'),
                         'url': _build_url(paper),
                         'external_ids': ext_ids,
-                        'relevance': rel,
+                        'relevance': boosted_rel,
                         'why_relevant': why,
                         'source': 'semanticscholar',
                     })
