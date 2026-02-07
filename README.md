@@ -120,6 +120,8 @@ echo 'NCBI_API_KEY=your_key_here' >> ~/.config/research30/.env
 
 ## Output
 
+See an [example HTML report](examples/example-report.html) (download and open in your browser).
+
 Default output is a flat ranked list sorted by score (0-100). Each item includes score, title, source, date, URL, metadata, abstract snippet (first 200 chars), and relevance explanation. When used as a Claude Code skill, Claude reads these and synthesizes key findings, research fronts, methods, and gaps.
 
 **Script outputs** (written on every run to `~/.local/share/research30/out/`):

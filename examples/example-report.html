@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research: large language model alignment</title>
+<style>
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #f8f9fa;
+  margin: 0;
+  padding: 1rem;
+}
+.container { max-width: 900px; margin: 0 auto; }
+header { margin-bottom: 1.5rem; }
+h1 { margin: 0 0 0.25rem 0; font-size: 1.5rem; }
+.meta { color: #555; font-size: 0.85rem; }
+.meta .sep { margin: 0 0.35rem; color: #ccc; }
+.notice {
+  background: #e8f4fd; border-left: 3px solid #4a9eda;
+  padding: 0.5rem 0.75rem; margin-bottom: 1rem; font-size: 0.85rem;
+}
+.notice.warning { background: #fff3cd; border-left-color: #d4a017; }
+.notice.error { background: #fde8e8; border-left-color: #d44; }
+.errors { margin-bottom: 1rem; }
+.errors h2 { font-size: 1rem; margin: 0 0 0.5rem 0; }
+.errors li { font-size: 0.85rem; color: #b33; }
+ol.results { list-style: none; padding: 0; margin: 0; counter-reset: item; }
+ol.results > li {
+  counter-increment: item;
+  background: #fff; border: 1px solid #e0e0e0; border-radius: 6px;
+  padding: 0.75rem 1rem; margin-bottom: 0.5rem;
+}
+ol.results > li:hover { border-color: #bbb; }
+.item-header { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.rank { color: #888; font-size: 0.85rem; min-width: 2rem; }
+.score {
+  display: inline-block; padding: 0.1rem 0.45rem; border-radius: 3px;
+  font-size: 0.8rem; font-weight: 600; color: #fff;
+}
+.score-high { background: #2a7d3f; }
+.score-mid { background: #b38600; }
+.score-low { background: #888; }
+.item-title { font-weight: 600; font-size: 0.95rem; }
+.item-title a { color: #1a1a1a; text-decoration: none; }
+.item-title a:hover { text-decoration: underline; }
+.source-tag {
+  display: inline-block; padding: 0.05rem 0.4rem; border-radius: 3px;
+  font-size: 0.7rem; font-weight: 600; color: #fff; white-space: nowrap;
+}
+.src-pubmed { background: #2563a0; }
+.src-s2 { background: #7c3aed; }
+.src-openalex { background: #0d7377; }
+.src-arxiv { background: #b31b1b; }
+.src-biorxiv { background: #cf6a1e; }
+.src-medrxiv { background: #a84e1e; }
+.src-hf { background: #c49000; }
+.src-unknown { background: #888; }
+.item-meta { font-size: 0.8rem; color: #555; margin-top: 0.2rem; }
+.item-meta a { color: #555; }
+details { margin-top: 0.3rem; }
+summary {
+  font-size: 0.8rem; color: #666; cursor: pointer;
+  user-select: none; list-style: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "Show abstract"; }
+details[open] summary::before { content: "Hide abstract"; }
+.abstract {
+  font-size: 0.85rem; color: #333; margin-top: 0.25rem;
+  padding: 0.5rem; background: #f5f5f5; border-radius: 4px;
+}
+.relevance { font-size: 0.75rem; color: #888; margin-top: 0.2rem; font-style: italic; }
+footer {
+  margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;
+  font-size: 0.8rem; color: #888; text-align: center;
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>large language model alignment</h1>
+    <div class="meta">
+      <span>2026-01-08 to 2026-02-07</span>
+      <span class="sep">|</span>
+      <span>OpenAlex: 9 | S2: 29 | PubMed: 22 | arXiv: 1 | HF: 13</span>
+      <span class="sep">|</span>
+      <span>74 total, showing top 25</span>
+    </div>
+  </header>
+  
+  
+  
+  <ol class="results">
+        <li>
+      <div class="item-header">
+        <span class="rank">1.</span>
+        <span class="score score-high">85</span>
+        <span class="source-tag src-openalex">OpenAlex</span>
+        <span class="item-title"><a href="https://doi.org/10.48550/arxiv.2602.05656" target="_blank">Alignment Verifiability in Large Language Models: Normative Indistinguishability under Behavioral Evaluation</a></span>
+      </div>
+      <div class="item-meta">2026-02-05</div>
+      <div class="item-meta">arXiv (Cornell University) | DOI: <a href="https://doi.org/10.48550/arxiv.2602.05656" target="_blank">10.48550/arxiv.2602.05656</a></div>
+      <details>
+      <summary></summary>
+      <div class="abstract">Behavioral evaluation is the dominant paradigm for assessing alignment in large language models (LLMs). In practice, alignment is inferred from performance under finite evaluation protocols - benchmarks, red-teaming suites, or automated pipelines - and observed compliance is often treated as evidence of underlying alignment. This inference step, from behavioral evidence to claims about latent alignment properties, is typically implicit and rarely analyzed as an inference problem in its own right. We study this problem formally. We frame alignment evaluation as an identifiability question under partial observability and allow agent behavior to depend on information correlated with the evaluation regime. Within this setting, we introduce the Alignment Verifiability Problem and the notion of Normative Indistinguishability, capturing when distinct latent alignment hypotheses induce identical distributions over all evaluator-accessible signals. Our main result is a negative but sharply delimited identifiability theorem. Under finite behavioral evaluation and evaluation-aware agents, observed behavioral compliance does not uniquely identify latent alignment. That is, even idealized behavioral evaluation cannot, in general, certify alignment as a latent property. We further show that behavioral alignment tests should be interpreted as estimators of indistinguishability classes rather than verifiers of alignment. Passing increasingly stringent tests may reduce the space of compatible hypotheses, but cannot collapse it to a singleton under the stated conditions. This reframes alignment benchmarks as providing upper bounds on observable compliance within a regime, rather than guarantees of underlying alignment.</div>
+    </details>
+      <div class="relevance">4/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in title</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">2.</span>
+        <span class="score score-high">84</span>
+        <span class="source-tag src-openalex">OpenAlex</span>
+        <span class="item-title"><a href="https://doi.org/10.20944/preprints202602.0128.v1" target="_blank">Mechanistic Interpretability for Large Language Model Alignment: Progress, Challenges, and Future Directions</a></span>
+      </div>
+      <div class="item-meta">2026-02-03</div>
+      <div class="item-meta">Preprints.org | DOI: <a href="https://doi.org/10.20944/preprints202602.0128.v1" target="_blank">10.20944/preprints202602.0128.v1</a></div>
+      <details>
+      <summary></summary>
+      <div class="abstract">Large language models (LLMs) have achieved remarkable capabilities across diverse tasks, yet their internal decision-making processes remain largely opaque. Mechanistic interpretability—the systematic study of how neural networks implement algorithms through their learned representations and computational structures—has emerged as a critical research direction for understanding and aligning these models. This paper surveys recent progress in mechanistic interpretability techniques applied to LLM alignment, examining methods ranging from circuit discovery to feature visualization, activation steering, and causal intervention. We analyze how interpretability insights have informed alignment strategies including reinforcement learning from human feedback (RLHF), constitutional AI, and scalable oversight. Key challenges are identified, including the superposition hypothesis, polysemanticity of neurons, and the difficulty of interpreting emergent behaviors in large-scale models. We propose future research directions focusing on automated interpretability, cross-model generalization of circuits, and the development of interpretability-driven alignment techniques that can scale to frontier models.</div>
+    </details>
+      <div class="relevance">exact phrase in title; 4/4 words in title; 4/4 words in abstract; 3/3 bigrams matched; all words in title</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">3.</span>
+        <span class="score score-high">80</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/dca456fbfcac4b1765ce207c6fed5cc65f72dd74" target="_blank">Semantic-aware Wasserstein Policy Regularization for Large Language Model Alignment</a></span>
+      </div>
+      <div class="item-meta">2026-02-02</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Large language models (LLMs) are commonly aligned with human preferences using reinforcement learning from human feedback (RLHF). In this method, LLM policies are generally optimized through reward maximization with Kullback-Leibler (KL) divergence regularization of the reference policy. However, KL and its $f$-divergence variants only compare token probabilities at identical indices, failing to capture semantic similarity. We propose Wasserstein Policy Regularization (WPR), a semantic-aware regularization for the RLHF framework based on the entropy-regularized Wasserstein distance, which incorporates the geometry of the token space. The dual formulation of the distance expresses the regularization as penalty terms applied to the reward via optimal dual variables, which yield a tractable objective compatible with standard RL algorithms. Empirically, our method outperforms KL- and $f$-divergence-based baselines, demonstrating the benefits of semantic-aware policy distances for alignment. Our code is available at https://github.com/aailab-kaist/WPR.</div>
+    </details>
+      <div class="relevance">exact phrase in title; 4/4 words in title; 4/4 words in abstract; 3/3 bigrams matched; all words in title</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">4.</span>
+        <span class="score score-high">80</span>
+        <span class="source-tag src-pubmed">PubMed</span>
+        <span class="item-title"><a href="https://pubmed.ncbi.nlm.nih.gov/40953412/" target="_blank">Enhancing 3D Medical Image Understanding With Pretraining Aided by 2D Multimodal Large Language Models.</a></span>
+      </div>
+      <div class="item-meta">2026-02-01</div>
+      <div class="item-meta">IEEE journal of biomedical and health informatics | DOI: <a href="https://doi.org/10.1109/JBHI.2025.3609739" target="_blank">10.1109/JBHI.2025.3609739</a> | MeSH: Humans, Imaging, Three-Dimensional, Magnetic Resonance Imaging, Tomography, X-Ray Computed, Supervised Machine Learning</div>
+      <details>
+      <summary></summary>
+      <div class="abstract">Understanding 3D medical image volumes is critical in the medical field, yet existing 3D medical convolution and transformer-based self-supervised learning (SSL) methods often lack deep semantic comprehension. Recent advancements in multimodal large language models (MLLMs) provide a promising approach to enhance image understanding through text descriptions. To leverage these 2D MLLMs for improved 3D medical image understanding, we propose Med3DInsight, a novel pretraining framework that integrates 3D image encoders with 2D MLLMs via a specially designed plane-slice-aware transformer module. Additionally, our model employs a partial optimal transport based alignment, demonstrating greater tolerance to noise introduced by potential noises in LLM-generated content. Med3DInsight introduces a new paradigm for scalable multimodal 3D medical representation learning without requiring human annotations. Extensive experiments demonstrate our state-of-the-art performance on two downstream tasks, i.e., segmentation and classification, across various public datasets with CT and MRI modalities, outperforming current SSL methods. Med3DInsight can be seamlessly integrated into existing 3D medical image understanding networks, potentially enhancing their performance.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">5.</span>
+        <span class="score score-mid">79</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/17ebf3b3f2939e768b0afbed85ce909d65011fab" target="_blank">VALUEFLOW: Toward Pluralistic and Steerable Value-based Alignment in Large Language Models</a></span>
+      </div>
+      <div class="item-meta">2026-02-03</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Aligning Large Language Models (LLMs) with the diverse spectrum of human values remains a central challenge: preference-based methods often fail to capture deeper motivational principles. Value-based approaches offer a more principled path, yet three gaps persist: extraction often ignores hierarchical structure, evaluation detects presence but not calibrated intensity, and the steerability of LLMs at controlled intensities remains insufficiently understood. To address these limitations, we introduce VALUEFLOW, the first unified framework that spans extraction, evaluation, and steering with calibrated intensity control. The framework integrates three components: (i) HIVES, a hierarchical value embedding space that captures intra- and cross-theory value structure; (ii) the Value Intensity DataBase (VIDB), a large-scale resource of value-labeled texts with intensity estimates derived from ranking-based aggregation; and (iii) an anchor-based evaluator that produces consistent intensity scores for model outputs by ranking them against VIDB panels. Using VALUEFLOW, we conduct a comprehensive large-scale study across ten models and four value theories, identifying asymmetries in steerability and composition laws for multi-value control. This paper establishes a scalable infrastructure for evaluating and controlling value intensity, advancing pluralistic alignment of LLMs.</div>
+    </details>
+      <div class="relevance">4/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in title</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">6.</span>
+        <span class="score score-mid">79</span>
+        <span class="source-tag src-pubmed">PubMed</span>
+        <span class="item-title"><a href="https://pubmed.ncbi.nlm.nih.gov/41632655/" target="_blank">Evaluating and Mitigating Relationship Hallucinations in Large Vision-Language Models.</a></span>
+      </div>
+      <div class="item-meta">2026-02-03</div>
+      <div class="item-meta">IEEE transactions on pattern analysis and machine intelligence | DOI: <a href="https://doi.org/10.1109/TPAMI.2026.3656175" target="_blank">10.1109/TPAMI.2026.3656175</a></div>
+      <details>
+      <summary></summary>
+      <div class="abstract">The issue of hallucinations is a prevalent concern in existing Large Vision-Language Models (LVLMs). Previous efforts have primarily focused on investigating object hallucinations, which can be easily alleviated by introducing object detectors. However, these efforts neglect hallucinations in inter-object relationships, essential for visual comprehension. In this work, we introduce R-Bench, a novel benchmark specifically designed to evaluate hallucinations in visual relationships. R-Bench includes both image-level questions to assess the existence of relationships and instance-level questions that probe deeper into local visual comprehension. Our analysis reveals that relationship hallucinations arise from three types of co-occurrences: relationship-relationship, subject-relationship, and relationship-object, exacerbated by the long-tail distribution in visual datasets. Moreover, LVLMs often ignore visual content, over-relying on common sense from language models, particularly in spatial reasoning tasks. We further demonstrate that region-level image-text alignment helps mitigate relationship hallucinations and propose a new baseline, Region-Aware Alignment Mitigation (RA2M), that enhances model attention to relevant regions, improving alignment between generated text and images.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 1/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">7.</span>
+        <span class="score score-mid">78</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/b7c58fd7d607c46a5c292e59b2a26a7f3addf4c6" target="_blank">Surgery: Mitigating Harmful Fine-Tuning for Large Language Models via Attention Sink</a></span>
+      </div>
+      <div class="item-meta">2026-02-05</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Harmful fine-tuning can invalidate safety alignment of large language models, exposing significant safety risks. In this paper, we utilize the attention sink mechanism to mitigate harmful fine-tuning. Specifically, we first measure a statistic named \emph{sink divergence} for each attention head and observe that \emph{different attention heads exhibit two different signs of sink divergence}. To understand its safety implications, we conduct experiments and find that the number of attention heads of positive sink divergence increases along with the increase of the model&#x27;s harmfulness when undergoing harmful fine-tuning. Based on this finding, we propose a separable sink divergence hypothesis -- \emph{attention heads associating with learning harmful patterns during fine-tuning are separable by their sign of sink divergence}. Based on the hypothesis, we propose a fine-tuning-stage defense, dubbed Surgery. Surgery utilizes a regularizer for sink divergence suppression, which steers attention heads toward the negative sink divergence group, thereby reducing the model&#x27;s tendency to learn and amplify harmful patterns. Extensive experiments demonstrate that Surgery improves defense performance by 5.90\%, 11.25\%, and 9.55\% on the BeaverTails, HarmBench, and SorryBench benchmarks, respectively. Source code is available on https://github.com/Lslland/Surgery.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">8.</span>
+        <span class="score score-mid">78</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/18a13fb280d8e5ae6be1d714dffaae8f960c1a75" target="_blank">Steering Externalities: Benign Activation Steering Unintentionally Increases Jailbreak Risk for Large Language Models</a></span>
+      </div>
+      <div class="item-meta">2026-02-03</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Activation steering is a practical post-training model alignment technique to enhance the utility of Large Language Models (LLMs). Prior to deploying a model as a service, developers can steer a pre-trained model toward specific behavioral objectives, such as compliance or instruction adherence, without the need for retraining. This process is as simple as adding a steering vector to the model&#x27;s internal representations. However, this capability unintentionally introduces critical and under-explored safety risks. We identify a phenomenon termed Steering Externalities, where steering vectors derived from entirely benign datasets-such as those enforcing strict compliance or specific output formats like JSON-inadvertently erode safety guardrails. Experiments reveal that these interventions act as a force multiplier, creating new vulnerabilities to jailbreaks and increasing attack success rates to over 80% on standard benchmarks by bypassing the initial safety alignment. Ultimately, our results expose a critical blind spot in deployment: benign activation steering systematically erodes the&quot;safety margin,&quot;rendering models more vulnerable to black-box attacks and proving that inference-time utility improvements must be rigorously audited for unintended safety externalities.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 3/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">9.</span>
+        <span class="score score-mid">78</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://doi.org/10.18653/v1/2025.acl-long.1479" target="_blank">LSSF: Safety Alignment for Large Language Models through Low-Rank Safety Subspace Fusion</a></span>
+      </div>
+      <div class="item-meta">2026-01-19</div>
+      <div class="item-meta">Annual Meeting of the Association for Computational Linguistics | DOI: <a href="https://doi.org/10.18653/v1/2025.acl-long.1479" target="_blank">10.18653/v1/2025.acl-long.1479</a> | 3 citations</div>
+      <details>
+      <summary></summary>
+      <div class="abstract">The safety mechanisms of large language models (LLMs) exhibit notable fragility, as even fine-tuning on datasets without harmful content may still undermine their safety capabilities. Meanwhile, existing safety alignment methods predominantly rely on the fine-tuning process, which inadvertently leads to the increased complexity and computational resources required. To address these issues, we introduce LSSF, a novel safety re-alignment framework with \underline{L}ow-Rank \underline{S}afety \underline{S}ubspace \underline{F}usion. Our proposed method exploits the low-rank characteristics of safety information in LLMs by constructing a low-rank projection matrix to extract the principal components of safety vectors. Notably, this projection matrix represents the low-rank safety subspace of the LLMs, which we have observed to remain stable during fine-tuning process and is isolated from the model&#x27;s general capabilities. These principal components are used to effectively restore safety alignment when combined with fine-tuned LLMs through linear arithmetic. Additionally, to account for the varying encoding densities of safety information across different layers of LLMs, we propose a novel metric called safety singular value entropy. This metric quantifies the encoding density and allows for the dynamic computation of the safety-critical rank for each safety vector. Extensive experiments demonstrate that our proposed post-hoc alignment method can effectively restore the safety alignment of fine-tuned models with minimal impact on their performance in downstream tasks.</div>
+    </details>
+      <div class="relevance">4/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in title</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">10.</span>
+        <span class="score score-mid">77</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/125065d788043aee8874cae71e34a39e7c8e88b7" target="_blank">MSign: An Optimizer Preventing Training Instability in Large Language Models via Stable Rank Restoration</a></span>
+      </div>
+      <div class="item-meta">2026-02-02</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Training instability remains a critical challenge in large language model (LLM) pretraining, often manifesting as sudden gradient explosions that waste significant computational resources. We study training failures in a 5M-parameter NanoGPT model scaled via $\mu$P, identifying two key phenomena preceding collapse: (1) rapid decline in weight matrix stable rank (ratio of squared Frobenius norm to squared spectral norm), and (2) increasing alignment between adjacent layer Jacobians. We prove theoretically that these two conditions jointly cause exponential gradient norm growth with network depth. To break this instability mechanism, we propose MSign, a new optimizer that periodically applies matrix sign operations to restore stable rank. Experiments on models from 5M to 3B parameters demonstrate that MSign effectively prevents training failures with a computational overhead of less than 7.0%.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">11.</span>
+        <span class="score score-mid">77</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/7495378cb672213d1e447570ead91784376a62ff" target="_blank">Tangent Space Fine-Tuning for Directional Preference Alignment in Large Language Models</a></span>
+      </div>
+      <div class="item-meta">2026-02-01</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Our goal is to enable large language models (LLMs) to balance multiple human preference dimensions; such as helpfulness, safety, and verbosity, through principled and controllable alignment. Existing preference optimization methods, including Direct Preference Optimization (DPO), collapse feedback into a single scalar reward, fixing one balance among objectives and preventing traversal of the Pareto front. Recent work by Ortiz-Jimenez et al. (2023) showed that fine-tuning can be viewed in a model&#x27;s tangent space, where linearized updates act as additive vectors that can be composed to jointly perform well on multiple tasks. Building on this formulation, we extend this idea to preference alignment and propose Tangent-Space Direct Preference Optimization (TS-DPO), which performs DPO within this locally linear regime to learn per-objective update directions. These directions can be linearly combined at inference to generate user-specified behaviors without additional optimization. Evaluated on the helpfulness-verbosity trade-off using the HelpSteer and UltraFeedback datasets, TS-DPO achieves broader Pareto-optimal coverage and smoother preference control than scalarized DPO. Canonical Correlation Analysis (CCA) further shows that tangent-space training amplifies canonical directions aligned with distinct preferences, improving disentanglement.</div>
+    </details>
+      <div class="relevance">4/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in title</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">12.</span>
+        <span class="score score-mid">77</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/96a19adfb86cbcbd85f0741b97b47950eea09275" target="_blank">DIFFA-2: A Practical Diffusion Large Language Model for General Audio Understanding</a></span>
+      </div>
+      <div class="item-meta">2026-01-30</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Autoregressive (AR) large audio language models (LALMs) such as Qwen-2.5-Omni have achieved strong performance on audio understanding and interaction, but scaling them remains costly in data and computation, and strictly sequential decoding limits inference efficiency. Diffusion large language models (dLLMs) have recently been shown to make effective use of limited training data, and prior work on DIFFA indicates that replacing an AR backbone with a diffusion counterpart can substantially improve audio understanding under matched settings, albeit at a proof-of-concept scale without large-scale instruction tuning, preference alignment, or practical decoding schemes. We introduce DIFFA-2, a practical diffusion-based LALM for general audio understanding. DIFFA-2 upgrades the speech encoder, employs dual semantic and acoustic adapters, and is trained with a four-stage curriculum that combines semantic and acoustic alignment, large-scale supervised fine-tuning, and variance-reduced preference optimization, using only fully open-source corpora. Experiments on MMSU, MMAU, and MMAR show that DIFFA-2 consistently improves over DIFFA and is competitive to strong AR LALMs under practical training budgets, supporting diffusion-based modeling is a viable backbone for large-scale audio understanding. Our code is available at https://github.com/NKU-HLT/DIFFA.git.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">13.</span>
+        <span class="score score-mid">77</span>
+        <span class="source-tag src-openalex">OpenAlex</span>
+        <span class="item-title"><a href="https://doi.org/10.48550/arxiv.2601.16444" target="_blank">Exploring the Effects of Alignment on Numerical Bias in Large Language Models</a></span>
+      </div>
+      <div class="item-meta">2026-01-23</div>
+      <div class="item-meta">arXiv (Cornell University) | DOI: <a href="https://doi.org/10.48550/arxiv.2601.16444" target="_blank">10.48550/arxiv.2601.16444</a></div>
+      <details>
+      <summary></summary>
+      <div class="abstract">&quot;LLM-as-a-judge,&quot; which utilizes large language models (LLMs) as evaluators, has proven effective in many evaluation tasks. However, evaluator LLMs exhibit numerical bias, a phenomenon where certain evaluation scores are generated disproportionately often, leading reduced evaluation performance. This study investigates the cause of this bias. Given that most evaluator LLMs are aligned through instruction tuning and preference tuning, and that prior research suggests alignment reduces output diversity, we hypothesize that numerical bias arises from alignment. To test this, we compare outputs from pre- and post-alignment LLMs, and observe that alignment indeed increases numerical bias. We also explore mitigation strategies for post-alignment LLMs, including temperature scaling, distribution calibration, and score range adjustment. Among these, score range adjustment is most effective in reducing bias and improving performance, though still heuristic. Our findings highlight the need for further work on optimal score range selection and more robust mitigation strategies.</div>
+    </details>
+      <div class="relevance">4/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in title</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">14.</span>
+        <span class="score score-mid">76</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/37b0a14fc6fcd6db5b8f5e72da6a57446b8b0de1" target="_blank">Faithful-Patchscopes: Understanding and Mitigating Model Bias in Hidden Representations Explanation of Large Language Models</a></span>
+      </div>
+      <div class="item-meta">2026-01-30</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Large Language Models (LLMs) have demonstrated strong capabilities for hidden representation interpretation through Patchscopes, a framework that uses LLMs themselves to generate human-readable explanations by decoding from internal hidden representations. However, our work shows that LLMs tend to rely on inherent linguistic patterns, which can override contextual information encoded in the hidden representations during decoding. For example, even when a hidden representation encodes the contextual attribute&quot;purple&quot;for&quot;broccoli&quot;, LLMs still generate&quot;green&quot;in their explanations, reflecting a strong prior association. This behavior reveals a systematic unfaithfulness in Patchscopes. To systematically study this issue, we first designed a dataset to evaluate the faithfulness of Patchscopes under biased cases, and our results show that there is an 18.84\% faithfulness decrease on average. We then propose Bias Alignment through Logit Recalibration (BALOR), which treats the output logits from an unpatched prompt as capturing model bias and contrasts them with logits obtained under patched contextual information. By recalibrating the logit distribution through this contrast, BALOR suppresses model bias and amplifies contextual information during generation. Experiments across multiple LLMs demonstrate that BALOR consistently outperforms existing baselines, achieving up to 33\% relative performance improvement.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">15.</span>
+        <span class="score score-mid">73</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/06b33cc3692b3fa9304ca66be4b59746604a12f9" target="_blank">Mechanistic Indicators of Steering Effectiveness in Large Language Models</a></span>
+      </div>
+      <div class="item-meta">2026-02-02</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Activation-based steering enables Large Language Models (LLMs) to exhibit targeted behaviors by intervening on intermediate activations without retraining. Despite its widespread use, the mechanistic factors that govern when steering succeeds or fails remain poorly understood, as prior work has relied primarily on black-box outputs or LLM-based judges. In this study, we investigate whether the reliability of steering can be diagnosed using internal model signals. We focus on two information-theoretic measures: the entropy-derived Normalized Branching Factor (NBF), and the Kullback-Leibler (KL) divergence between steered activations and targeted concepts in the vocabulary space. We hypothesize that effective steering corresponds to structured entropy preservation and coherent KL alignment across decoding steps. Building on a reliability study demonstrating high inter-judge agreement between two architecturally distinct LLMs, we use LLM-generated annotations as ground truth and show that these mechanistic signals provide meaningful predictive power for identifying successful steering and estimating failure probability. We further introduce a stronger evaluation baseline for Contrastive Activation Addition (CAA) and Sparse Autoencoder-based steering, the two most widely adopted activation-steering methods.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">16.</span>
+        <span class="score score-mid">73</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/5ab672843e014e5fb6a41f1d0bc962ffc840378d" target="_blank">FNF: Functional Network Fingerprint for Large Language Models</a></span>
+      </div>
+      <div class="item-meta">2026-01-30</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">The development of large language models (LLMs) is costly and has significant commercial value. Consequently, preventing unauthorized appropriation of open-source LLMs and protecting developers&#x27;intellectual property rights have become critical challenges. In this work, we propose the Functional Network Fingerprint (FNF), a training-free, sample-efficient method for detecting whether a suspect LLM is derived from a victim model, based on the consistency between their functional network activity. We demonstrate that models that share a common origin, even with differences in scale or architecture, exhibit highly consistent patterns of neuronal activity within their functional networks across diverse input samples. In contrast, models trained independently on distinct data or with different objectives fail to preserve such activity alignment. Unlike conventional approaches, our method requires only a few samples for verification, preserves model utility, and remains robust to common model modifications (such as fine-tuning, pruning, and parameter permutation), as well as to comparisons across diverse architectures and dimensionalities. FNF thus provides model owners and third parties with a simple, non-invasive, and effective tool for protecting LLM intellectual property. The code is available at https://github.com/WhatAboutMyStar/LLM_ACTIVATION.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">17.</span>
+        <span class="score score-mid">72</span>
+        <span class="source-tag src-pubmed">PubMed</span>
+        <span class="item-title"><a href="https://pubmed.ncbi.nlm.nih.gov/41637715/" target="_blank">Prompt Disentanglement via Language Guidance and Representation Alignment for Domain Generalization.</a></span>
+      </div>
+      <div class="item-meta">2026-02-04</div>
+      <div class="item-meta">IEEE transactions on pattern analysis and machine intelligence | DOI: <a href="https://doi.org/10.1109/TPAMI.2026.3661049" target="_blank">10.1109/TPAMI.2026.3661049</a></div>
+      <details>
+      <summary></summary>
+      <div class="abstract">Domain Generalization (DG) seeks to develop models that perform well on unseen target domains by learning domain-invariant representations. Recent advances in pre-trained Visual Foundation Models (VFMs), such as CLIP, have shown strong potential for enhancing DG through prompt tuning. However, existing VFM-based prompt tuning methods often focus on task-specific adaptation rather than disentangling domain invariant features, leaving cross-domain generalization insufficiently explored. In this paper, we address this challenge by fully leveraging the controllable and flexible language prompt in VFMs. Observing that the text modality is inherently rich in semantics and easier to disentangle, we propose a novel frame work termed Prompt Disentanglement via Language Guidance and Representation Alignment (PADG). PADG first employs a large language model (LLM) to disentangle textual prompts into domain-invariant and domain-specific components, which then guide the learning of domain-invariant visual representations. To complement the limitations of text-only guidance, we further introduce the Worst Explicit Representation Alignment (WERA) module, which enhances visual invariance by simulating bounded domain shifts through learnable stylization prompts and aligning representations between original and perturbed samples. Extensive experiments on mainstream DG benchmarks, including PACS, VLCS, OfficeHome, DomainNet, and TerraInc, demonstrate that PADG consistently outperforms existing state of-the-art methods, validating its effectiveness in robust domain invariant representation learning. The code is available at: https://anonymous.4open.science/r/paper-5403/.</div>
+    </details>
+      <div class="relevance">2/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">18.</span>
+        <span class="score score-mid">72</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/0443816f3bd77f69f0683e10e0e8bf8e62ab7bb8" target="_blank">Mechanistic Analysis of Catastrophic Forgetting in Large Language Models During Continual Fine-tuning</a></span>
+      </div>
+      <div class="item-meta">2026-01-26</div>
+      <div class="item-meta">1 citations</div>
+      <details>
+      <summary></summary>
+      <div class="abstract">Large language models exhibit remarkable performance across diverse tasks through pre-training and fine-tuning paradigms. However, continual fine-tuning on sequential tasks induces catastrophic forgetting, where newly acquired knowledge interferes with previously learned capabilities. Despite widespread observations of this phenomenon, the mechanistic understanding remains limited. Here, we present a comprehensive mechanistic analysis of catastrophic forgetting in transformer-based LLMs during sequential fine-tuning. Through systematic experiments across multiple model scales (109B to 400B total parameters) and task sequences, we identify three primary mechanisms driving forgetting: gradient interference in attention weights, representational drift in intermediate layers, and loss landscape flattening. We demonstrate that forgetting severity correlates strongly with task similarity (Pearson r = 0.87) and gradient alignment metrics. Our analysis reveals that approximately 15 to 23 percent of attention heads undergo severe disruption during fine-tuning, with lower layers showing greater susceptibility. These findings establish mechanistic foundations for developing targeted mitigation strategies in continual learning systems.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">19.</span>
+        <span class="score score-mid">70</span>
+        <span class="source-tag src-pubmed">PubMed</span>
+        <span class="item-title"><a href="https://pubmed.ncbi.nlm.nih.gov/41578062/" target="_blank">IPATH: A Large-Scale Pathology Image-Text Dataset from Instagram for Vision-Language Model Training.</a></span>
+      </div>
+      <div class="item-meta">2026-01-23</div>
+      <div class="item-meta">Journal of imaging informatics in medicine | DOI: <a href="https://doi.org/10.1007/s10278-025-01820-z" target="_blank">10.1007/s10278-025-01820-z</a></div>
+      <details>
+      <summary></summary>
+      <div class="abstract">Recent advancements in artificial intelligence (AI) have revealed important patterns in pathology images imperceptible to human observers that can improve diagnostic accuracy and decision support systems. However, progress has been limited due to the lack of publicly available medical images. To address this scarcity, we explore Instagram as a novel source of pathology images with expert annotations. We curated the IPATH dataset from Instagram, comprising 45,609 pathology image-text pairs rigorously filtered and curated for domain quality using classifiers, large language models, and manual filtering. To demonstrate the value of this dataset, we developed a multimodal AI model called IP-CLIP by fine-tuning a pretrained CLIP model using the IPATH dataset. We evaluated IP-CLIP on seven external histopathology datasets using zero shot classification and linear probing, where it consistently outperformed the original CLIP model. Furthermore, IP-CLIP matched or exceeded several recent state-of-the-art pathology vision-language models, despite being trained on a substantially smaller dataset. We also assessed image-text alignment on a 5k held-out IPATH subset using image-text retrieval, where IP-CLIP surpassed CLIP and other specialized models. These results demonstrate the effectiveness of the IPATH dataset and highlight the potential of leveraging social media data to develop AI models for medical image classification and enhance diagnostic accuracy.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">20.</span>
+        <span class="score score-mid">70</span>
+        <span class="source-tag src-pubmed">PubMed</span>
+        <span class="item-title"><a href="https://pubmed.ncbi.nlm.nih.gov/41577028/" target="_blank">From Evidence-based Endodontics to Generative AI: A Comparative Study of 11 Large Language Models.</a></span>
+      </div>
+      <div class="item-meta">2026-01-21</div>
+      <div class="item-meta">Journal of endodontics | DOI: <a href="https://doi.org/10.1016/j.joen.2026.01.009" target="_blank">10.1016/j.joen.2026.01.009</a></div>
+      <details>
+      <summary></summary>
+      <div class="abstract">INTRODUCTION: Generative large language models (LLMs) are increasingly used in dentistry, yet their guideline-based diagnostic accuracy and reproducibility remain uncertain. Position statements from the American Association of Endodontists and the European Society of Endodontology provide rigorous, evidence-based standards, making them an ideal benchmark to assess alignment of LLM outputs with endodontic best practices. METHODS: This study was conducted according to Transparent Reporting of a Multivariable Model for Individual Prognosis or Diagnosis-Large Language Models guidelines, evaluated 11 LLMs: ChatGPT 5, ChatGPT 4o, ChatGPT o3, Gemini 2.5 Flash, Gemini 2.5 Pro, Claude Sonnet 4, Claude Opus 4, Perplexity R1 1776, Perplexity Sonar, DeepSeek, and DeepSeek DeepThink R1. Sixty multiple-choice questions derived from American Association of Endodontists and European Society of Endodontology position statements were administered to each model in 5 rounds, generating 3300 responses. The primary outcome was all-correct accuracy and the secondary outcome was intra-model consistency. Comparisons were performed with chi-square tests and Bonferroni adjustment. RESULTS: All-correct accuracy varied significantly (χ2 = 50.56, df = 10, P &lt; .001). ChatGPT 4o and Claude Opus 4 achieved 95.0% accuracy, followed by ChatGPT 5, Claude Sonnet 4, Gemini 2.5 Flash, and Gemini 2.5 Pro (93.3%), and ChatGPT o3 (90.0%). DeepSeek DeepThink R1 scored 86.7%, Perplexity R1 1776 83.3%, Perplexity Sonar 81.7%, and DeepSeek 63.3%. Consistency exceeded 90% for most models, peaking at 98.3% for top performers but falling to 75.0% for DeepSeek. CONCLUSIONS: Most LLMs demonstrated high accuracy and reproducibility when benchmarked against authoritative endodontic guidelines. Despite notable progress over earlier generations, performance variability and confidently incorrect outputs highlight the need for rigorous validation and expert oversight before clinical integration.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">21.</span>
+        <span class="score score-mid">70</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/d98d266057bb752884368e714e9516cf8d9d73fd" target="_blank">Locate, Steer, and Improve: A Practical Survey of Actionable Mechanistic Interpretability in Large Language Models</a></span>
+      </div>
+      <div class="item-meta">2026-01-20</div>
+      <div class="item-meta">2 citations</div>
+      <details>
+      <summary></summary>
+      <div class="abstract">Mechanistic Interpretability (MI) has emerged as a vital approach to demystify the opaque decision-making of Large Language Models (LLMs). However, existing reviews primarily treat MI as an observational science, summarizing analytical insights while lacking a systematic framework for actionable intervention. To bridge this gap, we present a practical survey structured around the pipeline:&quot;Locate, Steer, and Improve.&quot;We formally categorize Localizing (diagnosis) and Steering (intervention) methods based on specific Interpretable Objects to establish a rigorous intervention protocol. Furthermore, we demonstrate how this framework enables tangible improvements in Alignment, Capability, and Efficiency, effectively operationalizing MI as an actionable methodology for model optimization. The curated paper list of this work is available at https://github.com/rattlesnakey/Awesome-Actionable-MI-Survey.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">22.</span>
+        <span class="score score-mid">70</span>
+        <span class="source-tag src-openalex">OpenAlex</span>
+        <span class="item-title"><a href="https://doi.org/10.3390/electronics15020421" target="_blank">HIEA: Hierarchical Inference for Entity Alignment with Collaboration of Instruction-Tuned Large Language Models and Small Models</a></span>
+      </div>
+      <div class="item-meta">2026-01-18</div>
+      <div class="item-meta">Electronics | DOI: <a href="https://doi.org/10.3390/electronics15020421" target="_blank">10.3390/electronics15020421</a></div>
+      <details>
+      <summary></summary>
+      <div class="abstract">Entity alignment (EA) facilitates knowledge fusion by matching semantically identical entities in distinct knowledge graphs (KGs). Existing embedding-based methods rely solely on intrinsic KG facts and often struggle with long-tail entities due to insufficient information. Recently, large language models (LLMs), empowered by rich background knowledge and strong reasoning abilities, have shown promise for EA. However, most current LLM-enhanced approaches follow the in-context learning paradigm, requiring multi-round interactions with carefully designed prompts to perform additional auxiliary operations, which leads to substantial computational overhead. Moreover, they fail to fully exploit the complementary strengths of embedding-based small models and LLMs. To address these limitations, we propose HIEA, a novel hierarchical inference framework for entity alignment. By instruction-tuning a generative LLM with a unified and concise prompt and a knowledge adapter, HIEA produces alignment results with a single LLM invocation. Meanwhile, embedding-based small models not only generate candidate entities but also support the LLM through data augmentation and certainty-aware source entity classification, fostering deeper collaboration between small models and LLMs. Extensive experiments on both standard and highly heterogeneous benchmarks demonstrate that HIEA consistently outperforms existing embedding-based and LLM-enhanced methods, achieving absolute Hits@1 improvements of up to 5.6%, while significantly reducing inference cost.</div>
+    </details>
+      <div class="relevance">4/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in title</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">23.</span>
+        <span class="score score-mid">70</span>
+        <span class="source-tag src-openalex">OpenAlex</span>
+        <span class="item-title"><a href="https://doi.org/10.20944/preprints202601.1138.v1" target="_blank">Large Language Models: A Survey of Architectures, Training Paradigms, and Alignment Methods</a></span>
+      </div>
+      <div class="item-meta">2026-01-15</div>
+      <div class="item-meta">Preprints.org | DOI: <a href="https://doi.org/10.20944/preprints202601.1138.v1" target="_blank">10.20944/preprints202601.1138.v1</a></div>
+      <details>
+      <summary></summary>
+      <div class="abstract">Large Language Models (LLMs) have become foundational to modern Artificial Intelligence (AI), enabling advanced reasoning, multimodal understanding, and scalable human-AI interaction across diverse domains. This survey provides a comprehensive review of major proprietary and open-source LLM families, including GPT, LLaMA 2, Gemini, Claude, DeepSeek, Falcon, and Qwen. It systematically examines architectural advancements such as transformer refinements, mixture-of-experts paradigms, attention optimization, long-context modeling, and multimodal integration. The paper further analyzes alignment and safety mechanisms, encompassing instruction tuning, reinforcement learning from human feedback, and constitutional frameworks, and discusses their implications for controllability, reliability, and responsible deployment. Comparative analysis of training strategies, data curation practices, efficiency optimizations, and application settings highlights key trade-offs among scalability, performance, interpretability, and ethical considerations. Beyond synthesis, the survey introduces a structured taxonomy and a feature-driven comparative study of over 50 reconstructed LLM architectures, complemented by an interactive visualization interface and an open-source implementation to support transparency and reproducibility. Finally, it outlines open challenges and future research directions related to transparency, computational cost, data governance, and societal impact, offering a unified reference for researchers and practitioners developing large-scale AI systems.</div>
+    </details>
+      <div class="relevance">4/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in title</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">24.</span>
+        <span class="score score-mid">69</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/303bdadfafaa9c54320d6076d915c78e16a03df5" target="_blank">A Monosemantic Attribution Framework for Stable Interpretability in Clinical Neuroscience Large Language Models</a></span>
+      </div>
+      <div class="item-meta">2026-01-25</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">Interpretability remains a key challenge for deploying large language models (LLMs) in clinical settings such as Alzheimer&#x27;s disease progression diagnosis, where early and trustworthy predictions are essential. Existing attribution methods exhibit high inter-method variability and unstable explanations due to the polysemantic nature of LLM representations, while mechanistic interpretability approaches lack direct alignment with model inputs and outputs and do not provide explicit importance scores. We introduce a unified interpretability framework that integrates attributional and mechanistic perspectives through monosemantic feature extraction. By constructing a monosemantic embedding space at the level of an LLM layer and optimizing the framework to explicitly reduce inter-method variability, our approach produces stable input-level importance scores and highlights salient features via a decompressed representation of the layer of interest, advancing the safe and trustworthy application of LLMs in cognitive health and neurodegenerative disease.</div>
+    </details>
+      <div class="relevance">3/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in abstract</div>
+    </li>
+    <li>
+      <div class="item-header">
+        <span class="rank">25.</span>
+        <span class="score score-mid">69</span>
+        <span class="source-tag src-s2">S2</span>
+        <span class="item-title"><a href="https://www.semanticscholar.org/paper/5f8c3ad645f9721c20b2a988d030c98ae6a6d7da" target="_blank">Adversarial Alignment: Ensuring Value Consistency in Large Language Models for Sensitive Domains</a></span>
+      </div>
+      <div class="item-meta">2026-01-19</div>
+      
+      <details>
+      <summary></summary>
+      <div class="abstract">With the wide application of large language models (LLMs), the problems of bias and value inconsistency in sensitive domains have gradually emerged, especially in terms of race, society and politics. In this paper, we propose an adversarial alignment framework, which enhances the value consistency of the model in sensitive domains through continued pre-training, instruction fine-tuning and adversarial training. In adversarial training, we use the Attacker to generate controversial queries, the Actor to generate responses with value consistency, and the Critic to filter and ensure response quality. Furthermore, we train a Value-Consistent Large Language Model, VC-LLM, for sensitive domains, and construct a bilingual evaluation dataset in Chinese and English. The experimental results show that VC-LLM performs better than the existing mainstream models in both Chinese and English tests, verifying the effectiveness of the method. Warning: This paper contains examples of LLMs that are offensive or harmful in nature.</div>
+    </details>
+      <div class="relevance">4/4 words in title; 4/4 words in abstract; 2/3 bigrams matched; all words in title</div>
+    </li>
+
+  </ol>
+  <footer>
+    Generated 2026-02-07 by research30
+  </footer>
+</div>
+</body>
+</html>
