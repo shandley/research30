@@ -225,3 +225,136 @@ def test_render_source_counts():
     assert "PubMed: 1" in output
     assert "HF: 1" in output
     assert "4 total" in output
+
+
+# --- HTML render tests ---
+
+
+def test_render_html_structure():
+    """Test HTML output has required structure."""
+    report = _make_report()
+    html = render.render_html(report)
+    assert "<!DOCTYPE html>" in html
+    assert "<html" in html
+    assert "</html>" in html
+    assert "CRISPR gene editing" in html
+    assert "2025-01-01" in html
+
+
+def test_render_html_scores():
+    """Test score badges appear with correct CSS classes."""
+    report = _make_report()
+    html = render.render_html(report)
+    assert "score-high" in html  # score 85
+    assert "score-mid" in html   # scores 60-79
+    assert ">85<" in html
+    assert ">75<" in html
+
+
+def test_render_html_source_tags():
+    """Test source pills appear with correct classes."""
+    report = _make_report()
+    html = render.render_html(report)
+    assert "src-pubmed" in html
+    assert "src-biorxiv" in html
+    assert "src-arxiv" in html
+    assert "src-hf" in html
+    assert ">PubMed<" in html
+    assert ">arXiv<" in html
+
+
+def test_render_html_abstracts_collapsible():
+    """Test abstracts are inside details/summary elements."""
+    report = _make_report()
+    html = render.render_html(report)
+    assert "<details>" in html
+    assert "<summary>" in html
+    assert "About CRISPR editing in T cells" in html
+    assert "Clinical trial results" in html
+
+
+def test_render_html_clickable_links():
+    """Test paper URLs are clickable links."""
+    report = _make_report()
+    html = render.render_html(report)
+    assert 'href="https://pubmed.ncbi.nlm.nih.gov/39000001/"' in html
+    assert 'target="_blank"' in html
+
+
+def test_render_html_doi_links():
+    """Test DOIs are rendered as clickable links."""
+    report = _make_report()
+    html = render.render_html(report)
+    assert 'href="https://doi.org/10.1038/nbt.001"' in html
+
+
+def test_render_html_errors():
+    """Test source errors appear in HTML."""
+    report = _make_report()
+    report.arxiv_error = "Connection timeout"
+    report.arxiv = []
+    html = render.render_html(report)
+    assert "Source Errors" in html
+    assert "Connection timeout" in html
+
+
+def test_render_html_empty_report():
+    """Test HTML rendering with no items."""
+    report = schema.Report(
+        topic="nothing", range_from="2025-01-01", range_to="2025-01-31",
+        generated_at="2025-01-20T12:00:00Z", mode="all",
+    )
+    html = render.render_html(report)
+    assert "nothing" in html
+    assert "showing top 0" in html
+
+
+def test_render_html_limit():
+    """Test limit controls how many items appear."""
+    report = _make_report()
+    html = render.render_html(report, limit=2)
+    assert "showing top 2" in html
+    # Count <li> elements in results
+    li_count = html.count("<li>")
+    assert li_count == 2
+
+
+def test_render_html_sorted_by_score():
+    """Test items appear in score-descending order."""
+    report = _make_report()
+    html = render.render_html(report)
+    # Score 85 should come before score 75
+    pos_85 = html.index(">85<")
+    pos_75 = html.index(">75<")
+    assert pos_85 < pos_75
+
+
+def test_render_html_cached():
+    """Test cached indicator in HTML."""
+    report = _make_report()
+    report.from_cache = True
+    report.cache_age_hours = 3.0
+    html = render.render_html(report)
+    assert "Cached" in html
+    assert "3.0h" in html
+
+
+def test_render_html_metadata():
+    """Test metadata appears (journal, MeSH, downloads)."""
+    report = _make_report()
+    html = render.render_html(report)
+    assert "Nature Biotechnology" in html
+    assert "1500 downloads" in html
+    assert "42 likes" in html
+
+
+def test_render_html_escapes_special_chars():
+    """Test that special characters are properly escaped."""
+    report = schema.Report(
+        topic='<script>alert("xss")</script>',
+        range_from="2025-01-01", range_to="2025-01-31",
+        generated_at="2025-01-20T12:00:00Z", mode="all",
+    )
+    html = render.render_html(report)
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html

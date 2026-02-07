@@ -151,11 +151,12 @@ Do NOT show the full synthesis in chat. Instead, show a **concise summary** with
 
 **Saved files:**
 - Full report: `~/.local/share/research30/reports/{slug}-{date}.md`
+- HTML report: `~/.local/share/research30/out/report.html`
 - Research log: `~/.local/share/research30/research-log.md`
 - Raw data: `~/.local/share/research30/out/report.json`
 ```
 
-Always show all three file paths so the user knows exactly where to find everything.
+Always show all four file paths so the user knows exactly where to find everything.
 
 ## Step 6: Offer follow-up actions
 

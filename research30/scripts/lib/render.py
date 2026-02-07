@@ -1,6 +1,7 @@
 """Output rendering for research30 skill."""
 
 import json
+from html import escape
 from pathlib import Path
 from typing import List, Optional
 
@@ -195,6 +196,252 @@ def _render_item(lines: List[str], idx: int, item):
     lines.append("")
 
 
+def render_html(report: schema.Report, limit: int = 25) -> str:
+    """Render self-contained HTML report with score badges and collapsible abstracts."""
+    all_items = _collect_all_items(report)
+    all_items.sort(key=lambda i: (-i.score, -(int((i.date or '0000-00-00')[:10].replace('-', '') or '0'))))
+    showing = all_items[:limit]
+
+    source_counts = _source_counts(report)
+    summary_parts = [f"{name}: {count}" for name, count in source_counts if count > 0]
+    total = len(all_items)
+
+    freshness = _assess_data_freshness(report)
+
+    rows_html = []
+    for idx, item in enumerate(showing, 1):
+        rows_html.append(_html_item(idx, item))
+
+    errors_html = _html_errors(report)
+    cache_html = ""
+    if report.from_cache:
+        age_str = f"{report.cache_age_hours:.1f}h old" if report.cache_age_hours else "cached"
+        cache_html = f'<div class="notice">Cached results ({escape(age_str)}) — use --refresh for fresh data</div>'
+
+    sparse_html = ""
+    if freshness['is_sparse']:
+        sparse_html = f'<div class="notice warning">Limited recent data — only {freshness["total_recent"]} item(s) from {escape(report.range_from)} to {escape(report.range_to)}</div>'
+
+    body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research: {escape(report.topic)}</title>
+<style>
+{_html_css()}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>{escape(report.topic)}</h1>
+    <div class="meta">
+      <span>{escape(report.range_from)} to {escape(report.range_to)}</span>
+      <span class="sep">|</span>
+      <span>{escape(' | '.join(summary_parts))}</span>
+      <span class="sep">|</span>
+      <span>{total} total, showing top {len(showing)}</span>
+    </div>
+  </header>
+  {sparse_html}
+  {cache_html}
+  {errors_html}
+  <ol class="results">
+    {''.join(rows_html)}
+  </ol>
+  <footer>
+    Generated {escape(report.generated_at[:10])} by research30
+  </footer>
+</div>
+</body>
+</html>"""
+    return body
+
+
+def _html_css() -> str:
+    """Return inline CSS for the HTML report."""
+    return """
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #f8f9fa;
+  margin: 0;
+  padding: 1rem;
+}
+.container { max-width: 900px; margin: 0 auto; }
+header { margin-bottom: 1.5rem; }
+h1 { margin: 0 0 0.25rem 0; font-size: 1.5rem; }
+.meta { color: #555; font-size: 0.85rem; }
+.meta .sep { margin: 0 0.35rem; color: #ccc; }
+.notice {
+  background: #e8f4fd; border-left: 3px solid #4a9eda;
+  padding: 0.5rem 0.75rem; margin-bottom: 1rem; font-size: 0.85rem;
+}
+.notice.warning { background: #fff3cd; border-left-color: #d4a017; }
+.notice.error { background: #fde8e8; border-left-color: #d44; }
+.errors { margin-bottom: 1rem; }
+.errors h2 { font-size: 1rem; margin: 0 0 0.5rem 0; }
+.errors li { font-size: 0.85rem; color: #b33; }
+ol.results { list-style: none; padding: 0; margin: 0; counter-reset: item; }
+ol.results > li {
+  counter-increment: item;
+  background: #fff; border: 1px solid #e0e0e0; border-radius: 6px;
+  padding: 0.75rem 1rem; margin-bottom: 0.5rem;
+}
+ol.results > li:hover { border-color: #bbb; }
+.item-header { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.rank { color: #888; font-size: 0.85rem; min-width: 2rem; }
+.score {
+  display: inline-block; padding: 0.1rem 0.45rem; border-radius: 3px;
+  font-size: 0.8rem; font-weight: 600; color: #fff;
+}
+.score-high { background: #2a7d3f; }
+.score-mid { background: #b38600; }
+.score-low { background: #888; }
+.item-title { font-weight: 600; font-size: 0.95rem; }
+.item-title a { color: #1a1a1a; text-decoration: none; }
+.item-title a:hover { text-decoration: underline; }
+.source-tag {
+  display: inline-block; padding: 0.05rem 0.4rem; border-radius: 3px;
+  font-size: 0.7rem; font-weight: 600; color: #fff; white-space: nowrap;
+}
+.src-pubmed { background: #2563a0; }
+.src-s2 { background: #7c3aed; }
+.src-openalex { background: #0d7377; }
+.src-arxiv { background: #b31b1b; }
+.src-biorxiv { background: #cf6a1e; }
+.src-medrxiv { background: #a84e1e; }
+.src-hf { background: #c49000; }
+.src-unknown { background: #888; }
+.item-meta { font-size: 0.8rem; color: #555; margin-top: 0.2rem; }
+.item-meta a { color: #555; }
+details { margin-top: 0.3rem; }
+summary {
+  font-size: 0.8rem; color: #666; cursor: pointer;
+  user-select: none; list-style: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "Show abstract"; }
+details[open] summary::before { content: "Hide abstract"; }
+.abstract {
+  font-size: 0.85rem; color: #333; margin-top: 0.25rem;
+  padding: 0.5rem; background: #f5f5f5; border-radius: 4px;
+}
+.relevance { font-size: 0.75rem; color: #888; margin-top: 0.2rem; font-style: italic; }
+footer {
+  margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;
+  font-size: 0.8rem; color: #888; text-align: center;
+}
+"""
+
+
+def _html_source_class(item) -> str:
+    """Return CSS class for source tag color."""
+    if isinstance(item, schema.PubmedItem):
+        return "src-pubmed"
+    elif isinstance(item, schema.SemanticScholarItem):
+        return "src-s2"
+    elif isinstance(item, schema.OpenAlexItem):
+        return "src-openalex"
+    elif isinstance(item, schema.ArxivItem):
+        return "src-arxiv"
+    elif isinstance(item, schema.BiorxivItem):
+        return "src-medrxiv" if item.source == "medrxiv" else "src-biorxiv"
+    elif isinstance(item, schema.HuggingFaceItem):
+        return "src-hf"
+    return "src-unknown"
+
+
+def _html_source_label(item) -> str:
+    """Return display label for source tag."""
+    if isinstance(item, schema.PubmedItem):
+        return "PubMed"
+    elif isinstance(item, schema.SemanticScholarItem):
+        return "S2"
+    elif isinstance(item, schema.OpenAlexItem):
+        return "OpenAlex"
+    elif isinstance(item, schema.ArxivItem):
+        return "arXiv"
+    elif isinstance(item, schema.BiorxivItem):
+        return item.source
+    elif isinstance(item, schema.HuggingFaceItem):
+        return f"HF:{item.item_type}"
+    return "?"
+
+
+def _html_score_class(score: int) -> str:
+    """Return CSS class for score badge color."""
+    if score >= 80:
+        return "score-high"
+    elif score >= 60:
+        return "score-mid"
+    return "score-low"
+
+
+def _html_item(idx: int, item) -> str:
+    """Render a single result item as an HTML list element."""
+    source_class = _html_source_class(item)
+    source_label = _html_source_label(item)
+    score_class = _html_score_class(item.score)
+    url = escape(item.url or '')
+    title = escape(item.title or '')
+    date = escape((item.date or 'n/a')[:10])
+
+    meta_parts = _item_metadata(item)
+    meta_html = ""
+    if meta_parts:
+        escaped_parts = []
+        for p in meta_parts:
+            if p.startswith("DOI: "):
+                doi = p[5:]
+                escaped_parts.append(f'DOI: <a href="https://doi.org/{escape(doi)}" target="_blank">{escape(doi)}</a>')
+            else:
+                escaped_parts.append(escape(p))
+        meta_html = f'<div class="item-meta">{" | ".join(escaped_parts)}</div>'
+
+    abstract = getattr(item, 'abstract', '')
+    abstract_html = ""
+    if abstract:
+        abstract_html = f"""<details>
+      <summary></summary>
+      <div class="abstract">{escape(abstract)}</div>
+    </details>"""
+
+    relevance_html = ""
+    if item.why_relevant:
+        relevance_html = f'<div class="relevance">{escape(item.why_relevant)}</div>'
+
+    return f"""    <li>
+      <div class="item-header">
+        <span class="rank">{idx}.</span>
+        <span class="score {score_class}">{item.score}</span>
+        <span class="source-tag {source_class}">{escape(source_label)}</span>
+        <span class="item-title"><a href="{url}" target="_blank">{title}</a></span>
+      </div>
+      <div class="item-meta">{date}</div>
+      {meta_html}
+      {abstract_html}
+      {relevance_html}
+    </li>
+"""
+
+
+def _html_errors(report: schema.Report) -> str:
+    """Render source errors as HTML."""
+    errors = []
+    for src in ('openalex', 'semanticscholar', 'pubmed', 'biorxiv', 'medrxiv', 'arxiv', 'huggingface'):
+        err = getattr(report, f'{src}_error', None)
+        if err:
+            errors.append((src, err))
+    if not errors:
+        return ""
+    items = "".join(f"<li><strong>{escape(src)}:</strong> {escape(err)}</li>" for src, err in errors)
+    return f'<div class="errors"><h2>Source Errors</h2><ul>{items}</ul></div>'
+
+
 def render_context_snippet(report: schema.Report) -> str:
     """Render reusable context snippet."""
     lines = []
@@ -336,6 +583,9 @@ def write_outputs(report: schema.Report):
 
     with open(OUTPUT_DIR / "report.md", 'w') as f:
         f.write(render_full_report(report))
+
+    with open(OUTPUT_DIR / "report.html", 'w') as f:
+        f.write(render_html(report))
 
     with open(OUTPUT_DIR / "context.md", 'w') as f:
         f.write(render_context_snippet(report))

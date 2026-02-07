@@ -222,7 +222,7 @@ def main():
     parser.add_argument("--mock", action="store_true", help="Use fixtures")
     parser.add_argument(
         "--emit",
-        choices=["compact", "json", "md", "context", "path"],
+        choices=["compact", "json", "md", "html", "context", "path"],
         default="compact",
         help="Output mode",
     )
@@ -281,6 +281,7 @@ def main():
                 progress = ui.ProgressDisplay(args.topic, show_banner=True)
                 progress.show_cached(cache_age)
 
+                render.write_outputs(report)
                 output_result(report, args.emit, depth)
                 return
 
@@ -422,6 +423,10 @@ def output_result(report: schema.Report, emit_mode: str, depth: str = "default")
         print(json.dumps(report.to_dict(), indent=2))
     elif emit_mode == "md":
         print(render.render_full_report(report))
+    elif emit_mode == "html":
+        limit = DISPLAY_LIMITS.get(depth, 25)
+        html_path = render.OUTPUT_DIR / "report.html"
+        print(f"HTML report: {html_path}")
     elif emit_mode == "context":
         print(render.render_context_snippet(report))
     elif emit_mode == "path":

@@ -72,7 +72,7 @@ python3 research30/scripts/research30.py <topic> [options]
 | `--deep` | Thorough: more API results, shows top 50 |
 | `--refresh` | Bypass 24h cache, fetch fresh results |
 | `--sources=MODE` | `all` (default), `preprints`, `pubmed`, `huggingface`, `openalex`, `semanticscholar`, `biorxiv`, `medrxiv`, `arxiv` |
-| `--emit=MODE` | `compact` (default), `json`, `md`, `context`, `path` |
+| `--emit=MODE` | `compact` (default), `html`, `json`, `md`, `context`, `path` |
 | `--debug` | Verbose HTTP logs to stderr |
 | `--mock` | Use bundled fixtures (for testing) |
 
@@ -90,6 +90,9 @@ python3 research30/scripts/research30.py "single-cell transcriptomics" --deep
 
 # PubMed only
 python3 research30/scripts/research30.py "Alzheimer's disease biomarkers" --sources=pubmed
+
+# HTML report (opens in browser)
+python3 research30/scripts/research30.py "protein folding" --emit=html
 
 # JSON output for programmatic use
 python3 research30/scripts/research30.py "protein folding" --emit=json
@@ -120,6 +123,7 @@ echo 'NCBI_API_KEY=your_key_here' >> ~/.config/research30/.env
 Default output is a flat ranked list sorted by score (0-100). Each item includes score, title, source, date, URL, metadata, abstract snippet (first 200 chars), and relevance explanation. When used as a Claude Code skill, Claude reads these and synthesizes key findings, research fronts, methods, and gaps.
 
 Full structured data is also written to `~/.local/share/research30/out/`:
+- `report.html` — interactive HTML with score badges, source tags, collapsible abstracts
 - `report.json` — all results (not just top N)
 - `report.md` — formatted markdown
 - `context.md` — condensed context snippet
