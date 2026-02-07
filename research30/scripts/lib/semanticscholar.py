@@ -36,6 +36,11 @@ MAX_PAGES = 3
 # API page size (S2 max is 100)
 PAGE_SIZE = 100
 
+# Minimum keyword relevance to keep a result. Higher than other sources
+# because S2 does semantic ranking server-side — we only need to filter
+# out tangential abstract-only mentions.
+RELEVANCE_THRESHOLD = 0.3
+
 
 def _extract_authors(authors: List[Dict]) -> str:
     """Extract author names from S2 authors list."""
@@ -99,7 +104,7 @@ def search_semantic_scholar(
                 paper.get('title', ''),
                 paper.get('abstract', ''),
             )
-            if rel > 0.1:
+            if rel > RELEVANCE_THRESHOLD:
                 ext_ids = paper.get('externalIds', {}) or {}
                 authors = paper.get('authors', [])
                 pub_types = paper.get('publicationTypes') or []
@@ -159,7 +164,7 @@ def search_semantic_scholar(
                     paper.get('title', ''),
                     abstract,
                 )
-                if rel > 0.1:
+                if rel > RELEVANCE_THRESHOLD:
                     ext_ids = paper.get('externalIds', {}) or {}
                     authors = paper.get('authors', [])
                     pub_types = paper.get('publicationTypes') or []

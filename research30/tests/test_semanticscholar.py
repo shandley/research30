@@ -40,7 +40,7 @@ def test_search_s2_relevance_filter():
     )
     assert error is None
     for r in results:
-        assert r['relevance'] > 0.1
+        assert r['relevance'] > 0.3
 
 
 def test_relevance_scores_populated():
