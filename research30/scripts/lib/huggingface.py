@@ -137,7 +137,7 @@ def _search_papers(topic: str, from_date: str) -> Tuple[List[Dict], Optional[str
             rel, _ = norm_mod.compute_keyword_relevance(
                 topic, title, ''
             )
-            if rel > 0.1:
+            if rel > 0.3:
                 relevant.append(paper)
 
         return relevant, None

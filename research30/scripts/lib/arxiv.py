@@ -79,6 +79,21 @@ def search_arxiv(
         xml_text = http.get_text(url, timeout=60)
         papers = xml_parse.parse_arxiv_atom(xml_text)
 
+        # Fallback: if quoted phrase returned nothing, retry with AND query
+        if not papers and len(topic_words) > 1:
+            and_terms = "+AND+".join(f"all:{quote(w)}" for w in topic_words)
+            fallback_query = f"{and_terms}+AND+submittedDate:[{from_arxiv}+TO+{to_arxiv}]"
+            fallback_url = (
+                f"http://export.arxiv.org/api/query"
+                f"?search_query={fallback_query}"
+                f"&sortBy=submittedDate&sortOrder=descending"
+                f"&start=0&max_results={max_results}"
+            )
+            http.log("arXiv phrase query returned 0 results, retrying with AND query")
+            time.sleep(3)  # respect rate limit before retry
+            xml_text = http.get_text(fallback_url, timeout=60)
+            papers = xml_parse.parse_arxiv_atom(xml_text)
+
         # Compute keyword relevance for scoring
         for paper in papers:
             rel, why = norm_mod.compute_keyword_relevance(
