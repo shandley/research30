@@ -1,7 +1,7 @@
 """XML parsing helpers for arXiv Atom and PubMed XML."""
 
 import xml.etree.ElementTree as ET
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 # arXiv Atom namespace
@@ -85,10 +85,12 @@ def parse_arxiv_atom(xml_text: str) -> List[Dict[str, Any]]:
     return results
 
 
-def parse_pubmed_esearch(json_data: dict) -> List[str]:
-    """Extract PMIDs from PubMed ESearch JSON response."""
+def parse_pubmed_esearch(json_data: dict) -> Tuple[List[str], str]:
+    """Extract PMIDs and query translation from PubMed ESearch JSON response."""
     result = json_data.get('esearchresult', {})
-    return result.get('idlist', [])
+    pmids = result.get('idlist', [])
+    query_translation = result.get('querytranslation', '')
+    return pmids, query_translation
 
 
 def parse_pubmed_efetch(xml_text: str) -> List[Dict[str, Any]]:
@@ -163,6 +165,15 @@ def parse_pubmed_efetch(xml_text: str) -> List[Dict[str, Any]]:
         # Publication date
         pub_date = _extract_pub_date(art)
 
+        # MeSH headings
+        mesh_terms = []
+        mesh_list = medline.find('MeshHeadingList')
+        if mesh_list is not None:
+            for mesh_heading in mesh_list.findall('MeshHeading'):
+                descriptor = mesh_heading.find('DescriptorName')
+                if descriptor is not None and descriptor.text:
+                    mesh_terms.append(descriptor.text.strip())
+
         # Citation count (not available in efetch, set to None)
         results.append({
             'pmid': pmid,
@@ -173,6 +184,7 @@ def parse_pubmed_efetch(xml_text: str) -> List[Dict[str, Any]]:
             'journal': journal,
             'doi': doi,
             'pub_date': pub_date,
+            'mesh_terms': mesh_terms,
         })
 
     return results

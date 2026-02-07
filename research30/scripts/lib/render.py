@@ -171,6 +171,8 @@ def _render_pubmed_section(
         lines.append(f"  {item.url}")
         if item.doi:
             lines.append(f"  DOI: {item.doi}")
+        if item.mesh_terms:
+            lines.append(f"  MeSH: {', '.join(item.mesh_terms)}")
         lines.append(f"  *{item.why_relevant}*")
         lines.append("")
 
@@ -265,6 +267,8 @@ def _render_openalex_section(
         lines.append(f"  {item.url}")
         if item.doi:
             lines.append(f"  DOI: {item.doi}")
+        if item.primary_topic_name:
+            lines.append(f"  Topic: {item.primary_topic_name}")
         lines.append(f"  *{item.why_relevant}*")
         lines.append("")
 

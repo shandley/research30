@@ -46,6 +46,14 @@
           "type": "journal"
         }
       },
+      "primary_topic": {
+        "id": "https://openalex.org/T11048",
+        "display_name": "Bacteriophages and microbial interactions",
+        "score": 0.9998,
+        "subfield": {"id": "subfields/2303", "display_name": "Ecology"},
+        "field": {"id": "fields/23", "display_name": "Environmental Science"},
+        "domain": {"id": "domains/3", "display_name": "Physical Sciences"}
+      },
       "cited_by_count": 15,
       "open_access": {"is_oa": true, "oa_url": "https://www.nature.com/articles/s41586-025-00001-1"}
     },
@@ -82,6 +90,14 @@
           "type": "repository"
         }
       },
+      "primary_topic": {
+        "id": "https://openalex.org/T11048",
+        "display_name": "Bacteriophages and microbial interactions",
+        "score": 0.9998,
+        "subfield": {"id": "subfields/2303", "display_name": "Ecology"},
+        "field": {"id": "fields/23", "display_name": "Environmental Science"},
+        "domain": {"id": "domains/3", "display_name": "Physical Sciences"}
+      },
       "cited_by_count": 0,
       "open_access": {"is_oa": true}
     },
@@ -110,6 +126,14 @@
           "display_name": "Science",
           "type": "journal"
         }
+      },
+      "primary_topic": {
+        "id": "https://openalex.org/T10267",
+        "display_name": "Protein Structure and Folding Dynamics",
+        "score": 0.9995,
+        "subfield": {"id": "subfields/1312", "display_name": "Molecular Biology"},
+        "field": {"id": "fields/13", "display_name": "Biochemistry, Genetics and Molecular Biology"},
+        "domain": {"id": "domains/1", "display_name": "Life Sciences"}
       },
       "cited_by_count": 5,
       "open_access": {"is_oa": false}

@@ -3,6 +3,7 @@
 import json
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 TESTS_DIR = Path(__file__).parent.resolve()
 SCRIPTS_DIR = TESTS_DIR.parent / "scripts"
@@ -118,6 +119,51 @@ def test_mock_result_fields():
         'openalex_id', 'title', 'authors', 'abstract', 'doi',
         'publication_date', 'source_name', 'source_type', 'work_type',
         'cited_by_count', 'url', 'relevance', 'why_relevant', 'source',
+        'primary_topic_name', 'primary_topic_score',
     ]
     for field in required_fields:
         assert field in item, f"Missing field: {field}"
+
+
+def test_discover_topics():
+    """Test discover_topics extracts topic IDs from API response."""
+    mock_response = {
+        "results": [
+            {"id": "https://openalex.org/T11048", "display_name": "Bacteriophages and microbial interactions"},
+            {"id": "https://openalex.org/T10066", "display_name": "Viral Metagenomics"},
+            {"id": "https://openalex.org/T12345", "display_name": "Gut Microbiome"},
+        ]
+    }
+    with patch.object(openalex.http, 'get', return_value=mock_response):
+        ids = openalex.discover_topics("virome")
+    assert ids == ["T11048", "T10066", "T12345"]
+
+
+def test_discover_topics_error_returns_empty():
+    """Test discover_topics returns empty list on error."""
+    with patch.object(openalex.http, 'get', side_effect=Exception("network error")):
+        ids = openalex.discover_topics("virome")
+    assert ids == []
+
+
+def test_discover_topics_empty_results():
+    """Test discover_topics with no results returns empty list."""
+    with patch.object(openalex.http, 'get', return_value={"results": []}):
+        ids = openalex.discover_topics("xyznonexistent")
+    assert ids == []
+
+
+def test_primary_topic_extracted():
+    """Test that mock results include primary_topic_name and primary_topic_score."""
+    fixture = _load_fixture()
+    results, error = openalex.search_openalex(
+        "virome", "2025-01-01", "2025-01-31", mock_data=fixture['results']
+    )
+    assert error is None
+    assert len(results) > 0
+    for r in results:
+        assert 'primary_topic_name' in r, "Missing primary_topic_name"
+        assert 'primary_topic_score' in r, "Missing primary_topic_score"
+        # The virome papers should have the bacteriophage topic
+        assert r['primary_topic_name'] == "Bacteriophages and microbial interactions"
+        assert r['primary_topic_score'] == 0.9998

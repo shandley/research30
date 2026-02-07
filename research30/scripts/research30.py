@@ -109,14 +109,14 @@ def _search_huggingface(topic, from_date, to_date, depth, mock):
     return huggingface.search_huggingface(topic, from_date, to_date, depth)
 
 
-def _search_openalex(topic, from_date, to_date, depth, mock):
+def _search_openalex(topic, from_date, to_date, depth, mock, topic_ids=None):
     """Search OpenAlex (runs in thread)."""
     if mock:
         mock_data = load_fixture("openalex_sample.json")
         if mock_data:
             return openalex.search_openalex(topic, from_date, to_date, depth,
                                             mock_data=mock_data.get('results', []))
-    return openalex.search_openalex(topic, from_date, to_date, depth)
+    return openalex.search_openalex(topic, from_date, to_date, depth, topic_ids=topic_ids)
 
 
 def _search_semanticscholar(topic, from_date, to_date, depth, mock, api_key):
@@ -165,10 +165,16 @@ def run_research(
     s2_key = config.get('S2_API_KEY')
     results = {}
 
+    # Discover OpenAlex topics before launching parallel searches.
+    # This is a fast, lightweight call (~50ms) that enables topic-augmented search.
+    topic_ids = None
+    if 'openalex' in sources_set and not mock:
+        topic_ids = openalex.discover_topics(topic)
+
     # Build futures
     search_funcs = {}
     if 'openalex' in sources_set:
-        search_funcs['openalex'] = lambda: _search_openalex(topic, from_date, to_date, depth, mock)
+        search_funcs['openalex'] = lambda: _search_openalex(topic, from_date, to_date, depth, mock, topic_ids)
     if 'semanticscholar' in sources_set:
         search_funcs['semanticscholar'] = lambda: _search_semanticscholar(topic, from_date, to_date, depth, mock, s2_key)
     if 'biorxiv' in sources_set:

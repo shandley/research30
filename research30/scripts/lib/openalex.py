@@ -2,6 +2,10 @@
 
 API: GET https://api.openalex.org/works?search={topic}&filter=from_publication_date:{from},to_publication_date:{to}
 Full-text search with relevance ranking — no need to paginate everything.
+
+Topic-augmented search: discover_topics() queries the OpenAlex topics API
+to find relevant topic IDs, which can be passed to search_openalex() to
+narrow results to topically relevant papers while preserving relevance ranking.
 """
 
 import logging
@@ -87,11 +91,52 @@ def _build_url(work: Dict) -> str:
     return work.get('id', '')
 
 
-def _fetch_page(topic: str, from_date: str, to_date: str, page: int) -> Dict[str, Any]:
+def discover_topics(topic: str) -> List[str]:
+    """Query the OpenAlex topics API to find relevant topic IDs.
+
+    Args:
+        topic: Search term to find matching topics.
+
+    Returns:
+        List of topic ID strings like ["T11048", "T10066"].
+        Returns empty list on any error (never fatal).
+    """
+    try:
+        params = urllib.parse.urlencode({
+            'search': topic,
+            'per_page': 3,
+            'mailto': MAILTO,
+        })
+        url = f"https://api.openalex.org/topics?{params}"
+        data = http.get(url, timeout=15)
+        topic_ids = []
+        for result in data.get('results', []):
+            raw_id = result.get('id', '')
+            # Strip URL prefix: "https://openalex.org/T11048" -> "T11048"
+            tid = raw_id.replace('https://openalex.org/', '')
+            if tid:
+                topic_ids.append(tid)
+        log.debug("openalex: discovered topics for %r: %s", topic, topic_ids)
+        return topic_ids
+    except Exception as e:
+        log.debug("openalex: topic discovery failed for %r: %s", topic, e)
+        return []
+
+
+def _fetch_page(topic: str, from_date: str, to_date: str, page: int,
+                topic_ids: Optional[List[str]] = None) -> Dict[str, Any]:
     """Fetch a single page of OpenAlex results."""
+    filter_str = f'from_publication_date:{from_date},to_publication_date:{to_date}'
+    if topic_ids:
+        # Format IDs with full URL prefix, joined by | (OR in OpenAlex filters)
+        formatted = '|'.join(
+            tid if tid.startswith('https://') else f'https://openalex.org/{tid}'
+            for tid in topic_ids
+        )
+        filter_str += f',topics.id:{formatted}'
     params = urllib.parse.urlencode({
         'search': topic,
-        'filter': f'from_publication_date:{from_date},to_publication_date:{to_date}',
+        'filter': filter_str,
         'sort': 'relevance_score:desc',
         'per_page': PAGE_SIZE,
         'page': page,
@@ -107,6 +152,7 @@ def search_openalex(
     to_date: str,
     depth: str = "default",
     mock_data: Optional[List[Dict[str, Any]]] = None,
+    topic_ids: Optional[List[str]] = None,
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """Search OpenAlex for works matching topic in date range.
 
@@ -120,6 +166,8 @@ def search_openalex(
         to_date: End date (YYYY-MM-DD)
         depth: "quick", "default", or "deep"
         mock_data: Optional mock data for testing (list of work dicts)
+        topic_ids: Optional list of OpenAlex topic IDs (e.g. ["T11048"])
+            to narrow results. Use discover_topics() to obtain these.
 
     Returns:
         Tuple of (list of matching item dicts, error_message or None)
@@ -140,6 +188,7 @@ def search_openalex(
             if rel > 0.1:
                 source_name, source_type = _extract_source(work.get('primary_location'))
                 doi = _extract_doi(work.get('doi'))
+                primary_topic = work.get('primary_topic', {})
                 results.append({
                     'openalex_id': work.get('id', '').replace('https://openalex.org/', ''),
                     'title': work.get('title', ''),
@@ -155,6 +204,8 @@ def search_openalex(
                     'relevance': rel,
                     'why_relevant': why,
                     'source': 'openalex',
+                    'primary_topic_name': primary_topic.get('display_name', ''),
+                    'primary_topic_score': primary_topic.get('score', 0.0),
                 })
         return results[:max_results], None
 
@@ -164,7 +215,8 @@ def search_openalex(
     try:
         for page_num in range(1, MAX_PAGES + 1):
             try:
-                data = _fetch_page(topic, from_date, to_date, page_num)
+                data = _fetch_page(topic, from_date, to_date, page_num,
+                                   topic_ids=topic_ids)
             except http.HTTPError as e:
                 if page_num == 1:
                     return [], str(e)
@@ -185,6 +237,7 @@ def search_openalex(
                 if rel > 0.1:
                     source_name, source_type = _extract_source(work.get('primary_location'))
                     doi = _extract_doi(work.get('doi'))
+                    primary_topic = work.get('primary_topic', {})
                     results.append({
                         'openalex_id': work.get('id', '').replace('https://openalex.org/', ''),
                         'title': work.get('title', ''),
@@ -200,6 +253,8 @@ def search_openalex(
                         'relevance': rel,
                         'why_relevant': why,
                         'source': 'openalex',
+                        'primary_topic_name': primary_topic.get('display_name', ''),
+                        'primary_topic_score': primary_topic.get('score', 0.0),
                     })
 
             # Check if we have enough or no more pages

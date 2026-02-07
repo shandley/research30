@@ -12,6 +12,13 @@ from urllib.parse import quote
 
 from . import http, xml_parse, normalize as norm_mod
 
+# Known phrases that should be kept as a unit (not split into individual words)
+_KNOWN_PHRASES = {
+    'machine learning', 'deep learning', 'gene editing', 'gene therapy',
+    'sickle cell', 'stem cell', 'clinical trial', 'single cell',
+    'genome wide', 'public health', 'mental health',
+}
+
 
 DEPTH_LIMITS = {
     'quick': 30,
@@ -56,13 +63,14 @@ def search_pubmed(
     max_results = DEPTH_LIMITS.get(depth, DEPTH_LIMITS['default'])
     rate_delay = RATE_LIMIT_WITH_KEY if api_key else RATE_LIMIT_NO_KEY
     error = None
+    query_translation = ''
 
     # Step 1: ESearch to get PMIDs
     if mock_esearch is not None:
-        pmids = xml_parse.parse_pubmed_esearch(mock_esearch)
+        pmids, query_translation = xml_parse.parse_pubmed_esearch(mock_esearch)
     else:
         try:
-            pmids = _esearch(topic, max_results, api_key)
+            pmids, query_translation = _esearch(topic, max_results, api_key)
         except http.HTTPError as e:
             return [], str(e)
         except Exception as e:
@@ -101,17 +109,42 @@ def search_pubmed(
         )
         article['relevance'] = rel
         article['why_relevant'] = why
+        article['query_translation'] = query_translation
 
     return articles, error
 
 
-def _esearch(topic: str, max_results: int, api_key: Optional[str] = None) -> List[str]:
-    """Run ESearch to find PMIDs."""
-    encoded_topic = quote(topic)
+def _build_query(topic: str) -> str:
+    """Build a TIAB-tagged PubMed query from a topic string.
+
+    Uses [TIAB] (Title/Abstract) field tags to avoid PubMed's Automatic
+    Term Mapping which can misfire (e.g., "gut" matching the journal *Gut*).
+
+    Single-word or known-phrase topics produce: {topic}[TIAB]
+    Multi-word topics produce:
+        ("{topic}"[TIAB] OR ({word1}[TIAB] AND {word2}[TIAB] AND ...))
+    """
+    words = topic.split()
+    if len(words) <= 1 or topic.lower() in _KNOWN_PHRASES:
+        return f'{topic}[TIAB]'
+
+    # Multi-word: combine exact phrase with individual AND terms
+    and_part = ' AND '.join(f'{w}[TIAB]' for w in words)
+    return f'("{topic}"[TIAB] OR ({and_part}))'
+
+
+def _esearch(topic: str, max_results: int, api_key: Optional[str] = None) -> Tuple[List[str], str]:
+    """Run ESearch to find PMIDs.
+
+    Returns:
+        Tuple of (list of PMID strings, querytranslation string).
+    """
+    query = _build_query(topic)
+    encoded_query = quote(query)
     url = (
         f"{ESEARCH_BASE}"
         f"?db=pubmed"
-        f"&term={encoded_topic}"
+        f"&term={encoded_query}"
         f"&reldate=30"
         f"&datetype=pdat"
         f"&retmax={max_results}"
@@ -121,7 +154,9 @@ def _esearch(topic: str, max_results: int, api_key: Optional[str] = None) -> Lis
         url += f"&api_key={api_key}"
 
     data = http.get(url, timeout=30)
-    return xml_parse.parse_pubmed_esearch(data)
+    pmids, query_translation = xml_parse.parse_pubmed_esearch(data)
+    http.log(f"PubMed querytranslation: {query_translation}")
+    return pmids, query_translation
 
 
 def _efetch(pmids: List[str], api_key: Optional[str] = None) -> List[Dict[str, Any]]:

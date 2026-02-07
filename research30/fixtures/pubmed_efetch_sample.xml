@@ -33,6 +33,11 @@
           <Day>15</Day>
         </ArticleDate>
       </Article>
+      <MeshHeadingList>
+        <MeshHeading><DescriptorName>CRISPR-Cas Systems</DescriptorName></MeshHeading>
+        <MeshHeading><DescriptorName>Gene Editing</DescriptorName></MeshHeading>
+        <MeshHeading><DescriptorName>Retinal Diseases</DescriptorName></MeshHeading>
+      </MeshHeadingList>
     </MedlineCitation>
     <PubmedData>
       <ArticleIdList>
@@ -69,6 +74,10 @@
           <Day>10</Day>
         </ArticleDate>
       </Article>
+      <MeshHeadingList>
+        <MeshHeading><DescriptorName>Anemia, Sickle Cell</DescriptorName></MeshHeading>
+        <MeshHeading><DescriptorName>Gene Editing</DescriptorName></MeshHeading>
+      </MeshHeadingList>
     </MedlineCitation>
     <PubmedData>
       <ArticleIdList>
@@ -107,6 +116,11 @@
           <Day>05</Day>
         </ArticleDate>
       </Article>
+      <MeshHeadingList>
+        <MeshHeading><DescriptorName>Epigenesis, Genetic</DescriptorName></MeshHeading>
+        <MeshHeading><DescriptorName>Gene Silencing</DescriptorName></MeshHeading>
+        <MeshHeading><DescriptorName>Neoplasms</DescriptorName></MeshHeading>
+      </MeshHeadingList>
     </MedlineCitation>
     <PubmedData>
       <ArticleIdList>

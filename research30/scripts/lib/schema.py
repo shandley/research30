@@ -136,6 +136,7 @@ class PubmedItem:
     journal: str
     doi: Optional[str]
     url: str
+    mesh_terms: List[str] = field(default_factory=list)
     date: Optional[str] = None
     date_confidence: str = "low"
     engagement: Optional[AcademicEngagement] = None
@@ -145,7 +146,7 @@ class PubmedItem:
     score: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        d = {
             'id': self.id,
             'pmid': self.pmid,
             'title': self.title,
@@ -162,6 +163,9 @@ class PubmedItem:
             'subs': self.subs.to_dict(),
             'score': self.score,
         }
+        if self.mesh_terms:
+            d['mesh_terms'] = self.mesh_terms
+        return d
 
 
 @dataclass
@@ -214,6 +218,8 @@ class OpenAlexItem:
     source_type: str  # "journal", "repository", etc.
     work_type: str    # "article", "preprint", etc.
     url: str
+    primary_topic_name: str = ""
+    primary_topic_score: float = 0.0
     date: Optional[str] = None
     date_confidence: str = "low"
     engagement: Optional[AcademicEngagement] = None
@@ -223,7 +229,7 @@ class OpenAlexItem:
     score: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        d = {
             'id': self.id,
             'openalex_id': self.openalex_id,
             'title': self.title,
@@ -242,6 +248,10 @@ class OpenAlexItem:
             'subs': self.subs.to_dict(),
             'score': self.score,
         }
+        if self.primary_topic_name:
+            d['primary_topic_name'] = self.primary_topic_name
+            d['primary_topic_score'] = self.primary_topic_score
+        return d
 
 
 @dataclass
@@ -397,7 +407,8 @@ class Report:
                 id=r['id'], pmid=r['pmid'], title=r['title'],
                 authors=r['authors'], abstract=r['abstract'],
                 journal=r['journal'], doi=r.get('doi'),
-                url=r['url'], date=r.get('date'),
+                url=r['url'], mesh_terms=r.get('mesh_terms', []),
+                date=r.get('date'),
                 date_confidence=r.get('date_confidence', 'low'),
                 engagement=_parse_engagement(r.get('engagement')),
                 relevance=r.get('relevance', 0.0), why_relevant=r.get('why_relevant', ''),
@@ -424,7 +435,10 @@ class Report:
                 authors=r['authors'], abstract=r['abstract'],
                 doi=r.get('doi'), source_name=r.get('source_name', ''),
                 source_type=r.get('source_type', ''), work_type=r.get('work_type', ''),
-                url=r['url'], date=r.get('date'),
+                url=r['url'],
+                primary_topic_name=r.get('primary_topic_name', ''),
+                primary_topic_score=r.get('primary_topic_score', 0.0),
+                date=r.get('date'),
                 date_confidence=r.get('date_confidence', 'low'),
                 engagement=_parse_engagement(r.get('engagement')),
                 relevance=r.get('relevance', 0.0), why_relevant=r.get('why_relevant', ''),

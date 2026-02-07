@@ -9,6 +9,6 @@
     "retstart": "0",
     "idlist": ["39000001", "39000002", "39000003"],
     "translationset": [],
-    "querytranslation": "CRISPR gene editing"
+    "querytranslation": "\"CRISPR gene editing\"[TIAB] OR (CRISPR[TIAB] AND gene[TIAB] AND editing[TIAB])"
   }
 }
