@@ -47,7 +47,7 @@ def render_compact(report: schema.Report, limit: int = 25) -> str:
 
     if report.from_cache:
         age_str = f"{report.cache_age_hours:.1f}h old" if report.cache_age_hours else "cached"
-        lines.append(f"**CACHED RESULTS** ({age_str}) - use `--refresh` for fresh data")
+        lines.append(f"**CACHED RESULTS** ({age_str}) — use `--refresh` for fresh data")
         lines.append("")
 
     lines.append(f"**Date Range:** {report.range_from} to {report.range_to}")
@@ -64,8 +64,8 @@ def render_compact(report: schema.Report, limit: int = 25) -> str:
     # Source errors
     _render_errors_section(lines, report)
 
-    # Flat ranked list
-    all_items.sort(key=lambda i: (-i.score,))
+    # Flat ranked list — sort by score desc, then date desc for tiebreaking
+    all_items.sort(key=lambda i: (-i.score, -(int((i.date or '0000-00-00')[:10].replace('-', '') or '0'))))
     for idx, item in enumerate(all_items[:limit], 1):
         _render_item(lines, idx, item)
 

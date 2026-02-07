@@ -78,9 +78,10 @@ python3 scripts/research30.py <topic> [options]
 | Flag | Description |
 |------|-------------|
 | `--emit=MODE` | Output format: `compact` (default), `json`, `md`, `context`, `path` |
-| `--sources=MODE` | Filter sources: `all` (default), `preprints`, `pubmed`, `huggingface`, `openalex`, `semanticscholar`, `biorxiv`, `arxiv` |
+| `--sources=MODE` | Filter sources: `all` (default), `preprints`, `pubmed`, `huggingface`, `openalex`, `semanticscholar`, `biorxiv`, `medrxiv`, `arxiv` |
 | `--quick` | Faster: fewer API results, shows top 10 |
 | `--deep` | Thorough: more API results, shows top 50 |
+| `--refresh` | Bypass cache, fetch fresh results |
 | `--debug` | Print verbose HTTP logs to stderr |
 | `--mock` | Use bundled fixture data instead of live APIs (for testing) |
 
@@ -130,7 +131,7 @@ Full structured data is also written to `~/.local/share/research30/out/`:
 - `report.md` -- formatted markdown report
 - `context.md` -- condensed context snippet for reuse
 
-Results are cached for 24 hours at `~/.cache/research30/`. Delete the cache directory to force fresh queries.
+Results are cached for 24 hours at `~/.cache/research30/`. Use `--refresh` to bypass the cache.
 
 ## How Scoring Works
 

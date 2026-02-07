@@ -228,12 +228,13 @@ def main():
     )
     parser.add_argument(
         "--sources",
-        choices=["all", "preprints", "pubmed", "huggingface", "openalex", "semanticscholar", "biorxiv", "arxiv"],
+        choices=["all", "preprints", "pubmed", "huggingface", "openalex", "semanticscholar", "biorxiv", "medrxiv", "arxiv"],
         default="all",
         help="Source filter",
     )
     parser.add_argument("--quick", action="store_true", help="Fewer results per source")
     parser.add_argument("--deep", action="store_true", help="More results per source")
+    parser.add_argument("--refresh", action="store_true", help="Bypass cache, fetch fresh results")
     parser.add_argument("--debug", action="store_true", help="Enable verbose debug logging")
 
     args = parser.parse_args()
@@ -265,18 +266,23 @@ def main():
 
     # Check cache
     cache_key = cache.get_cache_key(args.topic, from_date, to_date, args.sources)
-    if not args.mock:
+    if not args.mock and not args.refresh:
         cached_data, cache_age = cache.load_cache_with_age(cache_key)
         if cached_data:
-            report = schema.Report.from_dict(cached_data)
-            report.from_cache = True
-            report.cache_age_hours = cache_age
+            try:
+                report = schema.Report.from_dict(cached_data)
+            except (KeyError, TypeError):
+                # Stale cache from older schema version — ignore and fetch fresh
+                cached_data = None
+            else:
+                report.from_cache = True
+                report.cache_age_hours = cache_age
 
-            progress = ui.ProgressDisplay(args.topic, show_banner=True)
-            progress.show_cached(cache_age)
+                progress = ui.ProgressDisplay(args.topic, show_banner=True)
+                progress.show_cached(cache_age)
 
-            output_result(report, args.emit, depth)
-            return
+                output_result(report, args.emit, depth)
+                return
 
     # Initialize progress display
     progress = ui.ProgressDisplay(args.topic, show_banner=True)

@@ -236,7 +236,7 @@ def search_openalex(
             page_start_rank = (page_num - 1) * PAGE_SIZE
             for idx, work in enumerate(works):
                 global_rank = page_start_rank + idx
-                abstract = _reconstruct_abstract(work.get('abstract_inverted_index'))
+                abstract = work.get('abstract') or _reconstruct_abstract(work.get('abstract_inverted_index'))
                 rel, why = norm_mod.compute_keyword_relevance(
                     topic,
                     work.get('title', ''),

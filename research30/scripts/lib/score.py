@@ -280,8 +280,8 @@ def sort_items(items: List) -> List:
     """Sort items by score descending, then date descending."""
     def sort_key(item):
         score = -item.score
-        date = item.date or "0000-00-00"
-        date_key = -int(date.replace("-", ""))
+        date = (item.date or "0000-00-00")[:10]  # truncate to YYYY-MM-DD
+        date_key = -int(date.replace("-", "") or "0")
         title = getattr(item, "title", "")
         return (score, date_key, title)
 

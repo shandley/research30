@@ -130,12 +130,14 @@ def _search_papers(topic: str, from_date: str) -> Tuple[List[Dict], Optional[str
         relevant = []
         for paper in data:
             title = paper.get('title', '') or ''
+            summary = ''
             # daily_papers may have nested paper object
             if 'paper' in paper and isinstance(paper['paper'], dict):
                 title = paper['paper'].get('title', title)
+                summary = paper['paper'].get('summary', '') or ''
 
             rel, _ = norm_mod.compute_keyword_relevance(
-                topic, title, ''
+                topic, title, summary
             )
             if rel > 0.3:
                 relevant.append(paper)
