@@ -96,6 +96,24 @@ def compute_openalex_academic(engagement: Optional[schema.AcademicEngagement], w
     return min(100, score)
 
 
+def compute_semanticscholar_academic(engagement: Optional[schema.AcademicEngagement]) -> int:
+    """Compute academic signal score for Semantic Scholar item (0-100).
+
+    S2 provides citation counts and venue info.
+    """
+    if engagement is None:
+        return 30  # base
+
+    score = 30  # base
+    if engagement.published_journal:
+        score += 20  # published in a venue
+    if engagement.citation_count and engagement.citation_count > 0:
+        score += int(log1p_safe(engagement.citation_count) * 12)
+    if engagement.author_count and engagement.author_count >= 5:
+        score += 10
+    return min(100, score)
+
+
 def score_biorxiv_items(items: List[schema.BiorxivItem]) -> List[schema.BiorxivItem]:
     """Compute scores for bioRxiv/medRxiv items."""
     for item in items:
@@ -210,6 +228,33 @@ def score_openalex_items(items: List[schema.OpenAlexItem]) -> List[schema.OpenAl
         rel_score = int(item.relevance * 100)
         rec_score = dates.recency_score(item.date)
         acad_score = compute_openalex_academic(item.engagement, item.work_type)
+
+        item.subs = schema.SubScores(
+            relevance=rel_score,
+            recency=rec_score,
+            engagement=acad_score,
+        )
+
+        overall = (
+            PAPER_WEIGHT_RELEVANCE * rel_score +
+            PAPER_WEIGHT_RECENCY * rec_score +
+            PAPER_WEIGHT_ACADEMIC * acad_score
+        )
+
+        if item.date_confidence == "low":
+            overall -= 10
+
+        item.score = max(0, min(100, int(overall)))
+
+    return items
+
+
+def score_semanticscholar_items(items: List[schema.SemanticScholarItem]) -> List[schema.SemanticScholarItem]:
+    """Compute scores for Semantic Scholar items."""
+    for item in items:
+        rel_score = int(item.relevance * 100)
+        rec_score = dates.recency_score(item.date)
+        acad_score = compute_semanticscholar_academic(item.engagement)
 
         item.subs = schema.SubScores(
             relevance=rel_score,

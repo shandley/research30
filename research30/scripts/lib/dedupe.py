@@ -4,7 +4,7 @@ Two-pass strategy:
 1. DOI-based exact dedup across all sources (O(n), fast)
 2. Jaccard title similarity with 3-grams, threshold 0.7
 
-Cross-source priority: PubMed > OpenAlex > bioRxiv > medRxiv > arXiv > HuggingFace
+Cross-source priority: PubMed > Semantic Scholar > OpenAlex > bioRxiv > medRxiv > arXiv > HuggingFace
 """
 
 import re
@@ -15,11 +15,12 @@ from . import schema
 # Source priority for dedup (lower = higher priority, keep this one)
 SOURCE_PRIORITY = {
     'pubmed': 0,
-    'openalex': 1,
-    'biorxiv': 2,
-    'medrxiv': 3,
-    'arxiv': 4,
-    'huggingface': 5,
+    'semanticscholar': 1,
+    'openalex': 2,
+    'biorxiv': 3,
+    'medrxiv': 4,
+    'arxiv': 5,
+    'huggingface': 6,
 }
 
 
@@ -60,6 +61,8 @@ def _get_source(item) -> str:
         return 'huggingface'
     elif isinstance(item, schema.OpenAlexItem):
         return 'openalex'
+    elif isinstance(item, schema.SemanticScholarItem):
+        return 'semanticscholar'
     return 'unknown'
 
 
@@ -73,6 +76,9 @@ def _get_dois(item) -> List[str]:
         if item.doi:
             dois.append(item.doi)
     if isinstance(item, schema.OpenAlexItem):
+        if item.doi:
+            dois.append(item.doi)
+    if isinstance(item, schema.SemanticScholarItem):
         if item.doi:
             dois.append(item.doi)
     # Check engagement for published_doi (preprints may have published DOI)

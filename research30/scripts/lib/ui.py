@@ -59,6 +59,12 @@ OPENALEX_MESSAGES = [
     "Finding papers via OpenAlex...",
 ]
 
+S2_MESSAGES = [
+    "Searching Semantic Scholar...",
+    "Querying S2 for papers...",
+    "Finding scholarly articles via S2...",
+]
+
 PROCESSING_MESSAGES = [
     "Analyzing results...",
     "Scoring and ranking papers...",
@@ -143,6 +149,7 @@ class ProgressDisplay:
             'pubmed': PUBMED_MESSAGES,
             'huggingface': HF_MESSAGES,
             'openalex': OPENALEX_MESSAGES,
+            'semanticscholar': S2_MESSAGES,
         }
         colors = {
             'biorxiv': Colors.GREEN,
@@ -151,6 +158,7 @@ class ProgressDisplay:
             'pubmed': Colors.YELLOW,
             'huggingface': Colors.PURPLE,
             'openalex': Colors.GREEN,
+            'semanticscholar': Colors.CYAN,
         }
         msg = random.choice(messages.get(source, PROCESSING_MESSAGES))
         color = colors.get(source, Colors.CYAN)

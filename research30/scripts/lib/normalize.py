@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 from . import dates, schema
 
-T = TypeVar("T", schema.BiorxivItem, schema.ArxivItem, schema.PubmedItem, schema.HuggingFaceItem, schema.OpenAlexItem)
+T = TypeVar("T", schema.BiorxivItem, schema.ArxivItem, schema.PubmedItem, schema.HuggingFaceItem, schema.OpenAlexItem, schema.SemanticScholarItem)
 
 
 def compute_keyword_relevance(topic: str, title: str, abstract: str) -> Tuple[float, str]:
@@ -285,6 +285,50 @@ def normalize_openalex_items(
             source_name=item.get('source_name', ''),
             source_type=item.get('source_type', ''),
             work_type=item.get('work_type', ''),
+            url=item.get('url', ''),
+            date=date_str,
+            date_confidence=date_confidence,
+            engagement=engagement,
+            relevance=item.get('relevance', 0.0),
+            why_relevant=item.get('why_relevant', ''),
+        ))
+
+    return normalized
+
+
+def normalize_semanticscholar_items(
+    items: List[Dict[str, Any]],
+    from_date: str,
+    to_date: str,
+) -> List[schema.SemanticScholarItem]:
+    """Normalize raw Semantic Scholar items to schema."""
+    normalized = []
+
+    for item in items:
+        paper_id = item.get('paper_id', '')
+        date_str = item.get('publication_date') or item.get('date')
+        date_confidence = dates.get_date_confidence(date_str, from_date, to_date)
+
+        doi = item.get('doi')
+        authors_str = item.get('authors', '')
+        author_count = len(authors_str.split(', ')) if authors_str else None
+
+        engagement = schema.AcademicEngagement(
+            published_doi=doi,
+            published_journal=item.get('venue') or None,
+            citation_count=item.get('cited_by_count'),
+            author_count=author_count,
+        )
+
+        normalized.append(schema.SemanticScholarItem(
+            id=f"s2:{paper_id}",
+            paper_id=paper_id,
+            title=item.get('title', ''),
+            authors=authors_str,
+            abstract=item.get('abstract', ''),
+            doi=doi,
+            venue=item.get('venue', ''),
+            publication_types=item.get('publication_types', []),
             url=item.get('url', ''),
             date=date_str,
             date_confidence=date_confidence,

@@ -2,7 +2,7 @@
 """
 research30 - Search scientific literature from the last 30 days.
 
-Sources: OpenAlex, PubMed, arXiv, HuggingFace Hub (+ bioRxiv/medRxiv on request)
+Sources: OpenAlex, Semantic Scholar, PubMed, arXiv, HuggingFace Hub (+ bioRxiv/medRxiv on request)
 
 Usage:
     python3 research30.py <topic> [options]
@@ -10,7 +10,7 @@ Usage:
 Options:
     --mock              Use fixtures instead of real API calls
     --emit=MODE         Output mode: compact|json|md|context|path (default: compact)
-    --sources=MODE      Source filter: all|preprints|pubmed|huggingface|openalex|biorxiv|arxiv (default: all)
+    --sources=MODE      Source filter: all|preprints|pubmed|huggingface|openalex|semanticscholar|biorxiv|arxiv (default: all)
     --quick             Fewer results per source
     --deep              More results per source
     --debug             Enable verbose debug logging
@@ -42,6 +42,7 @@ from lib import (
     render,
     schema,
     score,
+    semanticscholar,
     ui,
 )
 
@@ -118,12 +119,25 @@ def _search_openalex(topic, from_date, to_date, depth, mock):
     return openalex.search_openalex(topic, from_date, to_date, depth)
 
 
+def _search_semanticscholar(topic, from_date, to_date, depth, mock, api_key):
+    """Search Semantic Scholar (runs in thread)."""
+    if mock:
+        mock_data = load_fixture("semanticscholar_sample.json")
+        if mock_data:
+            return semanticscholar.search_semantic_scholar(
+                topic, from_date, to_date, depth,
+                api_key=api_key, mock_data=mock_data.get('data', []))
+    return semanticscholar.search_semantic_scholar(
+        topic, from_date, to_date, depth, api_key=api_key)
+
+
 def determine_sources(requested: str) -> set:
     """Determine which sources to query."""
     source_map = {
-        'all': {'openalex', 'arxiv', 'pubmed', 'huggingface'},
+        'all': {'openalex', 'semanticscholar', 'arxiv', 'pubmed', 'huggingface'},
         'preprints': {'openalex', 'arxiv'},
         'openalex': {'openalex'},
+        'semanticscholar': {'semanticscholar'},
         'biorxiv': {'biorxiv'},
         'medrxiv': {'medrxiv'},
         'arxiv': {'arxiv'},
@@ -147,13 +161,16 @@ def run_research(
 
     Returns dict with source keys mapping to (items, error) tuples.
     """
-    api_key = config.get('NCBI_API_KEY')
+    ncbi_key = config.get('NCBI_API_KEY')
+    s2_key = config.get('S2_API_KEY')
     results = {}
 
     # Build futures
     search_funcs = {}
     if 'openalex' in sources_set:
         search_funcs['openalex'] = lambda: _search_openalex(topic, from_date, to_date, depth, mock)
+    if 'semanticscholar' in sources_set:
+        search_funcs['semanticscholar'] = lambda: _search_semanticscholar(topic, from_date, to_date, depth, mock, s2_key)
     if 'biorxiv' in sources_set:
         search_funcs['biorxiv'] = lambda: _search_biorxiv(topic, from_date, to_date, depth, mock)
     if 'medrxiv' in sources_set:
@@ -161,7 +178,7 @@ def run_research(
     if 'arxiv' in sources_set:
         search_funcs['arxiv'] = lambda: _search_arxiv(topic, from_date, to_date, depth, mock)
     if 'pubmed' in sources_set:
-        search_funcs['pubmed'] = lambda: _search_pubmed(topic, from_date, to_date, depth, mock, api_key)
+        search_funcs['pubmed'] = lambda: _search_pubmed(topic, from_date, to_date, depth, mock, ncbi_key)
     if 'huggingface' in sources_set:
         search_funcs['huggingface'] = lambda: _search_huggingface(topic, from_date, to_date, depth, mock)
 
@@ -205,7 +222,7 @@ def main():
     )
     parser.add_argument(
         "--sources",
-        choices=["all", "preprints", "pubmed", "huggingface", "openalex", "biorxiv", "arxiv"],
+        choices=["all", "preprints", "pubmed", "huggingface", "openalex", "semanticscholar", "biorxiv", "arxiv"],
         default="all",
         help="Source filter",
     )
@@ -271,6 +288,9 @@ def main():
     openalex_items = normalize.normalize_openalex_items(
         raw_results.get('openalex', ([], None))[0], from_date, to_date
     )
+    s2_items = normalize.normalize_semanticscholar_items(
+        raw_results.get('semanticscholar', ([], None))[0], from_date, to_date
+    )
     biorxiv_items = normalize.normalize_biorxiv_items(
         raw_results.get('biorxiv', ([], None))[0], from_date, to_date, 'biorxiv'
     )
@@ -289,6 +309,7 @@ def main():
 
     # Date filter
     openalex_items = normalize.filter_by_date_range(openalex_items, from_date, to_date)
+    s2_items = normalize.filter_by_date_range(s2_items, from_date, to_date)
     biorxiv_items = normalize.filter_by_date_range(biorxiv_items, from_date, to_date)
     medrxiv_items = normalize.filter_by_date_range(medrxiv_items, from_date, to_date)
     arxiv_items = normalize.filter_by_date_range(arxiv_items, from_date, to_date)
@@ -297,6 +318,7 @@ def main():
 
     # Score items
     openalex_items = score.score_openalex_items(openalex_items)
+    s2_items = score.score_semanticscholar_items(s2_items)
     biorxiv_items = score.score_biorxiv_items(biorxiv_items)
     medrxiv_items = score.score_biorxiv_items(medrxiv_items)
     arxiv_items = score.score_arxiv_items(arxiv_items)
@@ -305,6 +327,7 @@ def main():
 
     # Sort items
     openalex_items = score.sort_items(openalex_items)
+    s2_items = score.sort_items(s2_items)
     biorxiv_items = score.sort_items(biorxiv_items)
     medrxiv_items = score.sort_items(medrxiv_items)
     arxiv_items = score.sort_items(arxiv_items)
@@ -313,6 +336,7 @@ def main():
 
     # Dedupe within sources
     openalex_items = dedupe.dedupe_within_source(openalex_items)
+    s2_items = dedupe.dedupe_within_source(s2_items)
     biorxiv_items = dedupe.dedupe_within_source(biorxiv_items)
     medrxiv_items = dedupe.dedupe_within_source(medrxiv_items)
     arxiv_items = dedupe.dedupe_within_source(arxiv_items)
@@ -320,11 +344,12 @@ def main():
     hf_items = dedupe.dedupe_within_source(hf_items)
 
     # Cross-source dedup
-    all_items = openalex_items + biorxiv_items + medrxiv_items + arxiv_items + pubmed_items + hf_items
+    all_items = openalex_items + s2_items + biorxiv_items + medrxiv_items + arxiv_items + pubmed_items + hf_items
     deduped_all = dedupe.dedupe_cross_source(all_items)
 
     # Rebuild per-source lists from deduped results
     openalex_final = [i for i in deduped_all if isinstance(i, schema.OpenAlexItem)]
+    s2_final = [i for i in deduped_all if isinstance(i, schema.SemanticScholarItem)]
     biorxiv_final = [i for i in deduped_all if isinstance(i, schema.BiorxivItem) and i.source == 'biorxiv']
     medrxiv_final = [i for i in deduped_all if isinstance(i, schema.BiorxivItem) and i.source == 'medrxiv']
     arxiv_final = [i for i in deduped_all if isinstance(i, schema.ArxivItem)]
@@ -336,6 +361,7 @@ def main():
     # Create report
     report = schema.create_report(args.topic, from_date, to_date, args.sources)
     report.openalex = openalex_final
+    report.semanticscholar = s2_final
     report.biorxiv = biorxiv_final
     report.medrxiv = medrxiv_final
     report.arxiv = arxiv_final
@@ -343,7 +369,7 @@ def main():
     report.huggingface = hf_final
 
     # Set per-source errors
-    for src in ('openalex', 'biorxiv', 'medrxiv', 'arxiv', 'pubmed', 'huggingface'):
+    for src in ('openalex', 'semanticscholar', 'biorxiv', 'medrxiv', 'arxiv', 'pubmed', 'huggingface'):
         if src in raw_results:
             _, err = raw_results[src]
             if err:
@@ -359,6 +385,7 @@ def main():
     # Show completion
     counts = {
         'OpenAlex': len(openalex_final),
+        'S2': len(s2_final),
         'bioRxiv': len(biorxiv_final),
         'medRxiv': len(medrxiv_final),
         'arXiv': len(arxiv_final),

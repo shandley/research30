@@ -2,7 +2,7 @@
 
 A Claude Code skill that searches the last 30 days of scientific literature across multiple sources, with OpenAlex as the primary discovery engine.
 
-No API keys are required. All sources use free, public APIs.
+No API keys are required for core functionality. All default sources use free, public APIs. An optional Semantic Scholar API key enables an additional source.
 
 ## What It Does
 
@@ -10,6 +10,7 @@ Given a research topic, research30 queries all sources in parallel, scores resul
 
 Sources searched (default):
 - **OpenAlex** -- 250M+ scholarly works with full-text search. Covers journals, preprints (bioRxiv, medRxiv), conference papers, and more. This is the primary discovery source.
+- **Semantic Scholar** -- semantic search with citation graph data (requires free API key)
 - **PubMed** -- peer-reviewed journal articles via NCBI E-utilities
 - **arXiv** -- physics, math, CS, and quantitative biology preprints
 - **HuggingFace Hub** -- ML models, datasets, and daily papers
@@ -64,7 +65,7 @@ python3 scripts/research30.py <topic> [options]
 | Flag | Description |
 |------|-------------|
 | `--emit=MODE` | Output format: `compact` (default), `json`, `md`, `context`, `path` |
-| `--sources=MODE` | Filter sources: `all` (default), `preprints`, `pubmed`, `huggingface`, `openalex`, `biorxiv`, `arxiv` |
+| `--sources=MODE` | Filter sources: `all` (default), `preprints`, `pubmed`, `huggingface`, `openalex`, `semanticscholar`, `biorxiv`, `arxiv` |
 | `--quick` | Fewer results per source, faster execution |
 | `--deep` | More results per source, thorough search |
 | `--debug` | Print verbose HTTP logs to stderr |
@@ -106,7 +107,7 @@ python3 scripts/research30.py "virome" --sources=biorxiv
 
 Each result is scored 0-100 based on three signals:
 
-**For papers (OpenAlex, bioRxiv, medRxiv, arXiv, PubMed):**
+**For papers (OpenAlex, Semantic Scholar, bioRxiv, medRxiv, arXiv, PubMed):**
 - 50% keyword relevance (title match weighted 2x over abstract)
 - 25% recency (newer papers score higher)
 - 25% academic signal (peer review status, citations, journal, author count)
@@ -116,9 +117,28 @@ Each result is scored 0-100 based on three signals:
 - 25% recency
 - 30% academic signal (downloads, likes)
 
-Papers that appear in multiple sources (e.g., a preprint found via OpenAlex that was also published in PubMed) are deduplicated. The version from the higher-priority source is kept: PubMed > OpenAlex > bioRxiv > medRxiv > arXiv > HuggingFace.
+Papers that appear in multiple sources (e.g., a preprint found via OpenAlex that was also published in PubMed) are deduplicated. The version from the higher-priority source is kept: PubMed > Semantic Scholar > OpenAlex > bioRxiv > medRxiv > arXiv > HuggingFace.
 
 ## Optional Configuration
+
+### Semantic Scholar API Key
+
+A free API key enables Semantic Scholar as a source. Without a key, S2 is silently skipped.
+
+1. Request a key at https://www.semanticscholar.org/product/api#api-key-form
+2. Save it:
+
+```bash
+mkdir -p ~/.config/research30
+echo 'S2_API_KEY=your_key_here' >> ~/.config/research30/.env
+chmod 600 ~/.config/research30/.env
+```
+
+Or set it as an environment variable:
+
+```bash
+export S2_API_KEY=your_key_here
+```
 
 ### NCBI API Key
 
@@ -129,7 +149,7 @@ By default, PubMed queries are rate-limited to 3 requests per second. If you reg
 
 ```bash
 mkdir -p ~/.config/research30
-echo 'NCBI_API_KEY=your_key_here' > ~/.config/research30/.env
+echo 'NCBI_API_KEY=your_key_here' >> ~/.config/research30/.env
 chmod 600 ~/.config/research30/.env
 ```
 
@@ -139,7 +159,7 @@ Or set it as an environment variable:
 export NCBI_API_KEY=your_key_here
 ```
 
-This is optional. The skill works fine without it.
+Both keys are optional. The skill works fine without them.
 
 ## Output
 
@@ -167,8 +187,9 @@ research30/
   scripts/
     research30.py       -- Main entry point and orchestrator
     lib/
-      schema.py         -- Data models (OpenAlexItem, BiorxivItem, ArxivItem, etc.)
+      schema.py         -- Data models (OpenAlexItem, SemanticScholarItem, BiorxivItem, etc.)
       openalex.py       -- OpenAlex API client (primary source)
+      semanticscholar.py -- Semantic Scholar API client
       biorxiv.py        -- bioRxiv and medRxiv API client (parallel pagination)
       arxiv.py          -- arXiv API client
       pubmed.py         -- PubMed E-utilities client
@@ -183,7 +204,7 @@ research30/
       dates.py          -- Date utilities
       env.py            -- Configuration loading
       ui.py             -- Terminal progress display
-  tests/                -- Unit tests (63 tests)
+  tests/                -- Unit tests (73 tests)
   fixtures/             -- Mock API responses for testing
 ```
 

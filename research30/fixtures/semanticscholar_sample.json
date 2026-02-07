@@ -1,0 +1,69 @@
+{
+  "total": 3,
+  "offset": 0,
+  "data": [
+    {
+      "paperId": "a1b2c3d4e5f6",
+      "title": "Metagenomic characterization of the human gut virome in health and disease",
+      "abstract": "The human gut virome plays a critical role in shaping microbial communities and host immunity. This study provides a comprehensive metagenomic characterization of viral populations in the human gastrointestinal tract, revealing extensive diversity and novel viral lineages associated with disease states.",
+      "authors": [
+        {"authorId": "100", "name": "Alice Chen"},
+        {"authorId": "101", "name": "Bob Martinez"},
+        {"authorId": "102", "name": "Carol Zhang"},
+        {"authorId": "103", "name": "David Kim"},
+        {"authorId": "104", "name": "Eva Johansson"}
+      ],
+      "citationCount": 12,
+      "influentialCitationCount": 3,
+      "journal": {"name": "Nature Microbiology"},
+      "externalIds": {
+        "DOI": "10.1038/s41564-025-00001-1",
+        "PubMed": "39100001"
+      },
+      "openAccessPdf": {"url": "https://www.nature.com/articles/s41564-025-00001-1.pdf"},
+      "publicationDate": "2025-01-15",
+      "venue": "Nature Microbiology",
+      "url": "https://www.semanticscholar.org/paper/a1b2c3d4e5f6",
+      "publicationTypes": ["JournalArticle"]
+    },
+    {
+      "paperId": "f6e5d4c3b2a1",
+      "title": "Soil virome dynamics reveal bacteriophage-driven nutrient cycling",
+      "abstract": "Bacteriophages are major drivers of nutrient cycling in soil ecosystems. Through virome analysis of diverse soil samples, we demonstrate that phage-mediated lysis contributes significantly to carbon and nitrogen turnover in terrestrial environments.",
+      "authors": [
+        {"authorId": "200", "name": "Frank Wilson"},
+        {"authorId": "201", "name": "Grace Lee"}
+      ],
+      "citationCount": 0,
+      "influentialCitationCount": 0,
+      "journal": null,
+      "externalIds": {
+        "DOI": "10.1101/2025.01.10.000002"
+      },
+      "openAccessPdf": null,
+      "publicationDate": "2025-01-10",
+      "venue": "bioRxiv",
+      "url": "https://www.semanticscholar.org/paper/f6e5d4c3b2a1",
+      "publicationTypes": ["Preprint"]
+    },
+    {
+      "paperId": "z9y8x7w6v5u4",
+      "title": "Crystal structure of a novel zinc finger protein complex",
+      "abstract": "We report the crystal structure of a novel zinc finger protein complex at 1.8 angstrom resolution. The structure reveals an unusual binding mode that may inform drug design.",
+      "authors": [
+        {"authorId": "300", "name": "Henry Adams"}
+      ],
+      "citationCount": 3,
+      "influentialCitationCount": 1,
+      "journal": {"name": "Structure"},
+      "externalIds": {
+        "DOI": "10.1016/j.str.2025.01.001"
+      },
+      "openAccessPdf": null,
+      "publicationDate": "2025-01-12",
+      "venue": "Structure",
+      "url": "https://www.semanticscholar.org/paper/z9y8x7w6v5u4",
+      "publicationTypes": ["JournalArticle"]
+    }
+  ]
+}

@@ -34,11 +34,13 @@ def get_config() -> Dict[str, Any]:
     """Load configuration from environment and config file.
 
     NCBI_API_KEY is optional — increases PubMed rate limit from 3/sec to 10/sec.
+    S2_API_KEY is optional — enables Semantic Scholar as a source.
     """
     file_env = load_env_file(CONFIG_FILE)
 
     config = {
         'NCBI_API_KEY': os.environ.get('NCBI_API_KEY') or file_env.get('NCBI_API_KEY'),
+        'S2_API_KEY': os.environ.get('S2_API_KEY') or file_env.get('S2_API_KEY'),
     }
 
     return config
