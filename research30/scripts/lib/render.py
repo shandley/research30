@@ -33,8 +33,8 @@ def _assess_data_freshness(report: schema.Report) -> dict:
     }
 
 
-def render_compact(report: schema.Report, limit: int = 15) -> str:
-    """Render compact output for Claude to synthesize."""
+def render_compact(report: schema.Report, limit: int = 25) -> str:
+    """Render flat ranked list of top results with abstracts for synthesis."""
     lines = []
 
     lines.append(f"## Scientific Research Results: {report.topic}")
@@ -51,262 +51,148 @@ def render_compact(report: schema.Report, limit: int = 15) -> str:
         lines.append("")
 
     lines.append(f"**Date Range:** {report.range_from} to {report.range_to}")
-    lines.append(f"**Mode:** {report.mode}")
+
+    # Source summary
+    all_items = _collect_all_items(report)
+    source_counts = _source_counts(report)
+    summary_parts = [f"{name}: {count}" for name, count in source_counts if count > 0]
+    total = len(all_items)
+    showing = min(limit, total)
+    lines.append(f"**Sources:** {' | '.join(summary_parts)} ({total} total, showing top {showing})")
     lines.append("")
 
-    # bioRxiv
-    _render_biorxiv_section(lines, "bioRxiv Preprints", report.biorxiv, report.biorxiv_error, limit)
+    # Source errors
+    _render_errors_section(lines, report)
 
-    # medRxiv
-    _render_biorxiv_section(lines, "medRxiv Preprints", report.medrxiv, report.medrxiv_error, limit)
-
-    # arXiv
-    _render_arxiv_section(lines, report.arxiv, report.arxiv_error, limit)
-
-    # PubMed
-    _render_pubmed_section(lines, report.pubmed, report.pubmed_error, limit)
-
-    # HuggingFace
-    _render_huggingface_section(lines, report.huggingface, report.huggingface_error, limit)
-
-    # OpenAlex
-    _render_openalex_section(lines, report.openalex, report.openalex_error, limit)
-
-    # Semantic Scholar
-    _render_semanticscholar_section(lines, report.semanticscholar, report.semanticscholar_error, limit)
+    # Flat ranked list
+    all_items.sort(key=lambda i: (-i.score,))
+    for idx, item in enumerate(all_items[:limit], 1):
+        _render_item(lines, idx, item)
 
     return "\n".join(lines)
 
 
-def _render_biorxiv_section(
-    lines: List[str],
-    header: str,
-    items: List[schema.BiorxivItem],
-    error: Optional[str],
-    limit: int,
-):
-    """Render bioRxiv/medRxiv section."""
-    if error:
-        lines.append(f"### {header}")
+def _collect_all_items(report: schema.Report) -> list:
+    """Collect all items from report into a flat list."""
+    items = []
+    items.extend(report.openalex)
+    items.extend(report.semanticscholar)
+    items.extend(report.pubmed)
+    items.extend(report.biorxiv)
+    items.extend(report.medrxiv)
+    items.extend(report.arxiv)
+    items.extend(report.huggingface)
+    return items
+
+
+def _render_errors_section(lines: List[str], report: schema.Report):
+    """Render any source errors at the top of the output."""
+    errors = []
+    for src in ('openalex', 'semanticscholar', 'pubmed', 'biorxiv', 'medrxiv', 'arxiv', 'huggingface'):
+        err = getattr(report, f'{src}_error', None)
+        if err:
+            errors.append((src, err))
+
+    if errors:
+        lines.append("### Source Errors")
         lines.append("")
-        lines.append(f"**ERROR:** {error}")
-        lines.append("")
-        return
-
-    if not items:
-        return
-
-    lines.append(f"### {header}")
-    lines.append("")
-
-    for item in items[:limit]:
-        peer_str = " [PEER REVIEWED]" if item.engagement and item.engagement.published_doi else ""
-        date_str = f" ({item.date})" if item.date else ""
-
-        lines.append(f"**{item.id}** (score:{item.score}){date_str}{peer_str}")
-        lines.append(f"  {item.title}")
-        lines.append(f"  {item.url}")
-        lines.append(f"  Category: {item.category}")
-        lines.append(f"  *{item.why_relevant}*")
+        for src, err in errors:
+            lines.append(f"- **{src}:** {err}")
         lines.append("")
 
 
-def _render_arxiv_section(
-    lines: List[str],
-    items: List[schema.ArxivItem],
-    error: Optional[str],
-    limit: int,
-):
-    """Render arXiv section."""
-    if error:
-        lines.append("### arXiv Papers")
-        lines.append("")
-        lines.append(f"**ERROR:** {error}")
-        lines.append("")
-        return
-
-    if not items:
-        return
-
-    lines.append("### arXiv Papers")
-    lines.append("")
-
-    for item in items[:limit]:
-        date_str = f" ({item.date})" if item.date else ""
-        cat_str = f" [{item.primary_category}]" if item.primary_category else ""
-
-        lines.append(f"**{item.id}** (score:{item.score}){date_str}{cat_str}")
-        lines.append(f"  {item.title}")
-        lines.append(f"  {item.url}")
-        lines.append(f"  *{item.why_relevant}*")
-        lines.append("")
+def _source_tag(item) -> str:
+    """Return a bracketed source tag for display."""
+    if isinstance(item, schema.OpenAlexItem):
+        return "[OpenAlex]"
+    elif isinstance(item, schema.SemanticScholarItem):
+        return "[S2]"
+    elif isinstance(item, schema.PubmedItem):
+        return "[PubMed]"
+    elif isinstance(item, schema.BiorxivItem):
+        return f"[{item.source}]"
+    elif isinstance(item, schema.ArxivItem):
+        return "[arXiv]"
+    elif isinstance(item, schema.HuggingFaceItem):
+        return f"[HF:{item.item_type}]"
+    return "[?]"
 
 
-def _render_pubmed_section(
-    lines: List[str],
-    items: List[schema.PubmedItem],
-    error: Optional[str],
-    limit: int,
-):
-    """Render PubMed section."""
-    if error:
-        lines.append("### PubMed Articles")
-        lines.append("")
-        lines.append(f"**ERROR:** {error}")
-        lines.append("")
-        return
+def _item_metadata(item) -> List[str]:
+    """Extract key metadata strings for an item."""
+    parts = []
 
-    if not items:
-        return
-
-    lines.append("### PubMed Articles")
-    lines.append("")
-
-    for item in items[:limit]:
-        date_str = f" ({item.date})" if item.date else ""
-        journal_str = f" [{item.journal}]" if item.journal else ""
-
-        lines.append(f"**{item.id}** (score:{item.score}){date_str}{journal_str}")
-        lines.append(f"  {item.title}")
-        lines.append(f"  {item.url}")
+    if isinstance(item, schema.PubmedItem):
+        if item.journal:
+            parts.append(item.journal)
         if item.doi:
-            lines.append(f"  DOI: {item.doi}")
+            parts.append(f"DOI: {item.doi}")
         if item.mesh_terms:
-            lines.append(f"  MeSH: {', '.join(item.mesh_terms)}")
-        lines.append(f"  *{item.why_relevant}*")
-        lines.append("")
-
-
-def _render_huggingface_section(
-    lines: List[str],
-    items: List[schema.HuggingFaceItem],
-    error: Optional[str],
-    limit: int,
-):
-    """Render HuggingFace section."""
-    if error:
-        lines.append("### HuggingFace")
-        lines.append("")
-        lines.append(f"**ERROR:** {error}")
-        lines.append("")
-        return
-
-    if not items:
-        return
-
-    # Split into papers vs implementations
-    papers = [i for i in items if i.item_type == 'paper']
-    implementations = [i for i in items if i.item_type in ('model', 'dataset')]
-
-    if papers:
-        lines.append("### HuggingFace Papers")
-        lines.append("")
-        for item in papers[:limit]:
-            date_str = f" ({item.date})" if item.date else ""
-            eng_str = ""
-            if item.engagement and item.engagement.likes:
-                eng_str = f" [{item.engagement.likes} likes]"
-
-            lines.append(f"**{item.id}** (score:{item.score}){date_str}{eng_str}")
-            lines.append(f"  {item.title}")
-            lines.append(f"  {item.url}")
-            lines.append(f"  *{item.why_relevant}*")
-            lines.append("")
-
-    if implementations:
-        lines.append("### HuggingFace Implementations")
-        lines.append("")
-        for item in implementations[:limit]:
-            date_str = f" ({item.date})" if item.date else ""
-            type_str = f" [{item.item_type}]"
-            eng_parts = []
-            if item.engagement:
-                if item.engagement.downloads:
-                    eng_parts.append(f"{item.engagement.downloads} downloads")
-                if item.engagement.likes:
-                    eng_parts.append(f"{item.engagement.likes} likes")
-            eng_str = f" [{', '.join(eng_parts)}]" if eng_parts else ""
-
-            lines.append(f"**{item.id}** (score:{item.score}){type_str}{date_str}{eng_str}")
-            lines.append(f"  {item.title}")
-            lines.append(f"  by {item.author}")
-            lines.append(f"  {item.url}")
-            lines.append(f"  *{item.why_relevant}*")
-            lines.append("")
-
-
-def _render_openalex_section(
-    lines: List[str],
-    items: List[schema.OpenAlexItem],
-    error: Optional[str],
-    limit: int,
-):
-    """Render OpenAlex section."""
-    if error:
-        lines.append("### OpenAlex Works")
-        lines.append("")
-        lines.append(f"**ERROR:** {error}")
-        lines.append("")
-        return
-
-    if not items:
-        return
-
-    lines.append("### OpenAlex Works")
-    lines.append("")
-
-    for item in items[:limit]:
-        date_str = f" ({item.date})" if item.date else ""
-        source_str = f" [{item.source_name}]" if item.source_name else ""
-        cite_str = ""
-        if item.engagement and item.engagement.citation_count:
-            cite_str = f" [{item.engagement.citation_count} citations]"
-
-        lines.append(f"**{item.id}** (score:{item.score}){date_str}{source_str}{cite_str}")
-        lines.append(f"  {item.title}")
-        lines.append(f"  {item.url}")
+            parts.append(f"MeSH: {', '.join(item.mesh_terms[:5])}")
+    elif isinstance(item, schema.OpenAlexItem):
+        if item.source_name:
+            parts.append(item.source_name)
         if item.doi:
-            lines.append(f"  DOI: {item.doi}")
-        if item.primary_topic_name:
-            lines.append(f"  Topic: {item.primary_topic_name}")
-        lines.append(f"  *{item.why_relevant}*")
-        lines.append("")
-
-
-def _render_semanticscholar_section(
-    lines: List[str],
-    items: List[schema.SemanticScholarItem],
-    error: Optional[str],
-    limit: int,
-):
-    """Render Semantic Scholar section."""
-    if error:
-        lines.append("### Semantic Scholar")
-        lines.append("")
-        lines.append(f"**ERROR:** {error}")
-        lines.append("")
-        return
-
-    if not items:
-        return
-
-    lines.append("### Semantic Scholar")
-    lines.append("")
-
-    for item in items[:limit]:
-        date_str = f" ({item.date})" if item.date else ""
-        venue_str = f" [{item.venue}]" if item.venue else ""
-        cite_str = ""
+            parts.append(f"DOI: {item.doi}")
         if item.engagement and item.engagement.citation_count:
-            cite_str = f" [{item.engagement.citation_count} citations]"
-
-        lines.append(f"**{item.id}** (score:{item.score}){date_str}{venue_str}{cite_str}")
-        lines.append(f"  {item.title}")
-        lines.append(f"  {item.url}")
+            parts.append(f"{item.engagement.citation_count} citations")
+    elif isinstance(item, schema.SemanticScholarItem):
+        if item.venue:
+            parts.append(item.venue)
         if item.doi:
-            lines.append(f"  DOI: {item.doi}")
-        lines.append(f"  *{item.why_relevant}*")
-        lines.append("")
+            parts.append(f"DOI: {item.doi}")
+        if item.engagement and item.engagement.citation_count:
+            parts.append(f"{item.engagement.citation_count} citations")
+    elif isinstance(item, schema.ArxivItem):
+        if item.primary_category:
+            parts.append(item.primary_category)
+    elif isinstance(item, schema.BiorxivItem):
+        if item.category:
+            parts.append(item.category)
+        if item.engagement and item.engagement.published_doi:
+            parts.append("PEER REVIEWED")
+    elif isinstance(item, schema.HuggingFaceItem):
+        if item.item_type:
+            parts.append(item.item_type)
+        eng_parts = []
+        if item.engagement:
+            if item.engagement.downloads:
+                eng_parts.append(f"{item.engagement.downloads} downloads")
+            if item.engagement.likes:
+                eng_parts.append(f"{item.engagement.likes} likes")
+        if eng_parts:
+            parts.extend(eng_parts)
+
+    return parts
+
+
+def _source_counts(report: schema.Report) -> list:
+    """Return list of (display_name, count) for each source."""
+    return [
+        ("OpenAlex", len(report.openalex)),
+        ("S2", len(report.semanticscholar)),
+        ("PubMed", len(report.pubmed)),
+        ("biorxiv", len(report.biorxiv)),
+        ("medRxiv", len(report.medrxiv)),
+        ("arXiv", len(report.arxiv)),
+        ("HF", len(report.huggingface)),
+    ]
+
+
+def _render_item(lines: List[str], idx: int, item):
+    """Render a single numbered item with metadata and abstract."""
+    source = _source_tag(item)
+
+    lines.append(f"{idx}. **({item.score})** {item.title} {source}")
+    lines.append(f"   {item.date or 'n/a'} | {item.url}")
+    meta = _item_metadata(item)
+    if meta:
+        lines.append(f"   {' | '.join(meta)}")
+    abstract = getattr(item, 'abstract', '')
+    if abstract:
+        lines.append(f"   > {abstract[:200].strip()}")
+    lines.append(f"   *{item.why_relevant}*")
+    lines.append("")
 
 
 def render_context_snippet(report: schema.Report) -> str:

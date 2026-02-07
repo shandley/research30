@@ -275,7 +275,7 @@ def main():
             progress = ui.ProgressDisplay(args.topic, show_banner=True)
             progress.show_cached(cache_age)
 
-            output_result(report, args.emit)
+            output_result(report, args.emit, depth)
             return
 
     # Initialize progress display
@@ -401,13 +401,17 @@ def main():
     progress.show_complete(counts)
 
     # Output result
-    output_result(report, args.emit)
+    output_result(report, args.emit, depth)
 
 
-def output_result(report: schema.Report, emit_mode: str):
+DISPLAY_LIMITS = {'quick': 10, 'default': 25, 'deep': 50}
+
+
+def output_result(report: schema.Report, emit_mode: str, depth: str = "default"):
     """Output the result based on emit mode."""
     if emit_mode == "compact":
-        print(render.render_compact(report))
+        limit = DISPLAY_LIMITS.get(depth, 25)
+        print(render.render_compact(report, limit=limit))
     elif emit_mode == "json":
         print(json.dumps(report.to_dict(), indent=2))
     elif emit_mode == "md":

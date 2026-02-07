@@ -188,7 +188,7 @@ def search_openalex(
             if rel > 0.1:
                 source_name, source_type = _extract_source(work.get('primary_location'))
                 doi = _extract_doi(work.get('doi'))
-                primary_topic = work.get('primary_topic', {})
+                primary_topic = work.get('primary_topic') or {}
                 results.append({
                     'openalex_id': work.get('id', '').replace('https://openalex.org/', ''),
                     'title': work.get('title', ''),
@@ -237,7 +237,7 @@ def search_openalex(
                 if rel > 0.1:
                     source_name, source_type = _extract_source(work.get('primary_location'))
                     doi = _extract_doi(work.get('doi'))
-                    primary_topic = work.get('primary_topic', {})
+                    primary_topic = work.get('primary_topic') or {}
                     results.append({
                         'openalex_id': work.get('id', '').replace('https://openalex.org/', ''),
                         'title': work.get('title', ''),
