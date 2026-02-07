@@ -135,7 +135,7 @@ Use the Read tool to read the existing log (if it exists), then use the Write to
 
 ## Step 5: Show a brief summary in chat
 
-Do NOT show the full synthesis in chat. Instead, show a **concise summary** (15 lines max):
+Do NOT show the full synthesis in chat. Instead, show a **concise summary** with clear links to saved files:
 
 ```markdown
 ## {TOPIC} — Last 30 Days
@@ -149,19 +149,24 @@ Do NOT show the full synthesis in chat. Instead, show a **concise summary** (15 
 
 **{N} papers** from {sources} | Top score: {max}
 
-Full report saved to `~/.local/share/research30/reports/{slug}-{date}.md`
+**Saved files:**
+- Full report: `~/.local/share/research30/reports/{slug}-{date}.md`
+- Research log: `~/.local/share/research30/research-log.md`
+- Raw data: `~/.local/share/research30/out/report.json`
 ```
+
+Always show all three file paths so the user knows exactly where to find everything.
 
 ## Step 6: Offer follow-up actions
 
 After the summary, ask what the user wants to do next:
 
 > **What next?**
-> - "deep dive on [finding]" — expand on a specific finding with paper details
-> - "compare methods" — compare approaches across the top papers
-> - "top papers" — show the full top 10 list with abstracts
-> - "search [related topic]" — run a new search on a related area
-> - "open report" — show the full saved report
+> - **"deep dive on [finding]"** — expand on a specific finding with paper details
+> - **"compare methods"** — compare approaches across the top papers
+> - **"top papers"** — show the full top 10 list with abstracts
+> - **"search [related topic]"** — run a new search on a related area
+> - **"open report"** — display the full saved report in chat
 
 ## Follow-up Mode
 
