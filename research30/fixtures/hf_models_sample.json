@@ -1,0 +1,29 @@
+[
+  {
+    "modelId": "biolab/crispr-efficiency-predictor",
+    "id": "biolab/crispr-efficiency-predictor",
+    "likes": 42,
+    "downloads": 1500,
+    "tags": ["biology", "crispr", "gene-editing", "pytorch"],
+    "lastModified": "2025-01-12T10:00:00Z",
+    "createdAt": "2025-01-05T08:00:00Z"
+  },
+  {
+    "modelId": "genomics-ai/guide-rna-scorer",
+    "id": "genomics-ai/guide-rna-scorer",
+    "likes": 28,
+    "downloads": 890,
+    "tags": ["biology", "rna", "crispr", "transformers"],
+    "lastModified": "2025-01-10T14:00:00Z",
+    "createdAt": "2024-12-20T12:00:00Z"
+  },
+  {
+    "modelId": "opengenome/protein-structure-v2",
+    "id": "opengenome/protein-structure-v2",
+    "likes": 156,
+    "downloads": 8900,
+    "tags": ["protein", "structure-prediction", "pytorch"],
+    "lastModified": "2025-01-14T09:00:00Z",
+    "createdAt": "2024-11-01T10:00:00Z"
+  }
+]

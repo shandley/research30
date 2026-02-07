@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2024//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_240101.dtd">
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation>
+      <PMID>39000001</PMID>
+      <Article>
+        <Journal>
+          <JournalIssue>
+            <PubDate>
+              <Year>2025</Year>
+              <Month>Jan</Month>
+              <Day>15</Day>
+            </PubDate>
+          </JournalIssue>
+          <Title>Nature Biotechnology</Title>
+        </Journal>
+        <ArticleTitle>Clinical applications of CRISPR-Cas9 gene editing in inherited retinal diseases</ArticleTitle>
+        <Abstract>
+          <AbstractText Label="BACKGROUND">Gene editing with CRISPR-Cas9 has shown promise for treating inherited retinal diseases.</AbstractText>
+          <AbstractText Label="METHODS">We conducted a phase I/II clinical trial of subretinal CRISPR-Cas9 delivery in 12 patients with Leber congenital amaurosis type 10.</AbstractText>
+          <AbstractText Label="RESULTS">Ten of 12 patients showed measurable improvement in visual acuity at 6 months follow-up, with no serious adverse events.</AbstractText>
+          <AbstractText Label="CONCLUSIONS">CRISPR gene editing shows clinical efficacy for inherited retinal diseases with an acceptable safety profile.</AbstractText>
+        </Abstract>
+        <AuthorList>
+          <Author><LastName>Thompson</LastName><ForeName>Rebecca</ForeName></Author>
+          <Author><LastName>Liu</LastName><ForeName>Wei</ForeName></Author>
+          <Author><LastName>Nakamura</LastName><ForeName>Yuki</ForeName></Author>
+        </AuthorList>
+        <ArticleDate DateType="Electronic">
+          <Year>2025</Year>
+          <Month>01</Month>
+          <Day>15</Day>
+        </ArticleDate>
+      </Article>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">39000001</ArticleId>
+        <ArticleId IdType="doi">10.1038/nbt.2025.001</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+  <PubmedArticle>
+    <MedlineCitation>
+      <PMID>39000002</PMID>
+      <Article>
+        <Journal>
+          <JournalIssue>
+            <PubDate>
+              <Year>2025</Year>
+              <Month>Jan</Month>
+              <Day>10</Day>
+            </PubDate>
+          </JournalIssue>
+          <Title>Science</Title>
+        </Journal>
+        <ArticleTitle>Base editing achieves therapeutic correction of sickle cell disease mutations</ArticleTitle>
+        <Abstract>
+          <AbstractText>Using adenine base editors, we achieved efficient correction of the sickle cell disease mutation in patient-derived hematopoietic stem cells. Edited cells showed restored hemoglobin expression and normal red blood cell morphology in xenograft models.</AbstractText>
+        </Abstract>
+        <AuthorList>
+          <Author><LastName>Park</LastName><ForeName>Sung-Ho</ForeName></Author>
+          <Author><LastName>Anderson</LastName><ForeName>Emily</ForeName></Author>
+        </AuthorList>
+        <ArticleDate DateType="Electronic">
+          <Year>2025</Year>
+          <Month>01</Month>
+          <Day>10</Day>
+        </ArticleDate>
+      </Article>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">39000002</ArticleId>
+        <ArticleId IdType="doi">10.1126/science.2025.002</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+  <PubmedArticle>
+    <MedlineCitation>
+      <PMID>39000003</PMID>
+      <Article>
+        <Journal>
+          <JournalIssue>
+            <PubDate>
+              <Year>2025</Year>
+              <Month>Jan</Month>
+              <Day>05</Day>
+            </PubDate>
+          </JournalIssue>
+          <Title>Cell</Title>
+        </Journal>
+        <ArticleTitle>Epigenetic editing with dCas9 for reversible gene silencing in cancer therapy</ArticleTitle>
+        <Abstract>
+          <AbstractText>We developed a dCas9-based epigenetic editing system for reversible gene silencing. By fusing catalytically dead Cas9 to KRAB and DNMT3A domains, we achieved stable silencing of oncogenes without permanent DNA changes, offering a safer approach to gene therapy for cancer.</AbstractText>
+        </Abstract>
+        <AuthorList>
+          <Author><LastName>Fernandez</LastName><ForeName>Maria</ForeName></Author>
+          <Author><LastName>O'Brien</LastName><ForeName>Patrick</ForeName></Author>
+          <Author><LastName>Kim</LastName><ForeName>Ji-Won</ForeName></Author>
+          <Author><LastName>Müller</LastName><ForeName>Hans</ForeName></Author>
+        </AuthorList>
+        <ArticleDate DateType="Electronic">
+          <Year>2025</Year>
+          <Month>01</Month>
+          <Day>05</Day>
+        </ArticleDate>
+      </Article>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">39000003</ArticleId>
+        <ArticleId IdType="doi">10.1016/j.cell.2025.001</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+</PubmedArticleSet>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query: CRISPR gene editing</title>
+  <id>http://arxiv.org/api/query</id>
+  <entry>
+    <id>http://arxiv.org/abs/2501.12345v1</id>
+    <title>Deep Learning for CRISPR Guide RNA Design Optimization</title>
+    <summary>We propose a transformer-based model for optimizing CRISPR guide RNA sequences. Our model achieves state-of-the-art performance on benchmark datasets, predicting on-target efficiency with 0.92 Spearman correlation. The model considers sequence context, chromatin accessibility, and thermodynamic properties.</summary>
+    <published>2025-01-14T18:00:00Z</published>
+    <updated>2025-01-14T18:00:00Z</updated>
+    <author><name>Alice Zhang</name></author>
+    <author><name>Bob Kumar</name></author>
+    <author><name>Carol Wei</name></author>
+    <arxiv:primary_category term="cs.LG" />
+    <category term="cs.LG" />
+    <category term="q-bio.GN" />
+    <link href="http://arxiv.org/abs/2501.12345v1" type="text/html" />
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2501.11111v1</id>
+    <title>Attention Mechanisms for Large Language Models: A Survey</title>
+    <summary>This survey comprehensively reviews attention mechanisms in large language models. We categorize existing approaches into self-attention, cross-attention, and linear attention variants. We analyze computational complexity and discuss recent efficiency improvements.</summary>
+    <published>2025-01-12T12:00:00Z</published>
+    <updated>2025-01-12T12:00:00Z</updated>
+    <author><name>David Chen</name></author>
+    <author><name>Eva Martin</name></author>
+    <arxiv:primary_category term="cs.CL" />
+    <category term="cs.CL" />
+    <category term="cs.AI" />
+    <link href="http://arxiv.org/abs/2501.11111v1" type="text/html" />
+  </entry>
+</feed>

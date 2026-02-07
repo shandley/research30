@@ -1,0 +1,32 @@
+[
+  {
+    "id": "2501.12345",
+    "title": "Deep Learning for CRISPR Guide RNA Design",
+    "publishedAt": "2025-01-14T00:00:00Z",
+    "paper": {
+      "id": "2501.12345",
+      "title": "Deep Learning for CRISPR Guide RNA Design",
+      "summary": "A transformer-based model for optimizing CRISPR guide RNA sequences with state-of-the-art performance.",
+      "upvotes": 15,
+      "authors": [
+        {"name": "Alice Zhang"},
+        {"name": "Bob Kumar"}
+      ]
+    }
+  },
+  {
+    "id": "2501.09876",
+    "title": "Advances in Gene Editing Safety Assessment",
+    "publishedAt": "2025-01-11T00:00:00Z",
+    "paper": {
+      "id": "2501.09876",
+      "title": "Advances in Gene Editing Safety Assessment",
+      "summary": "A comprehensive framework for assessing off-target effects in gene editing applications using whole-genome sequencing.",
+      "upvotes": 8,
+      "authors": [
+        {"name": "Carol Wei"},
+        {"name": "David Chen"}
+      ]
+    }
+  }
+]

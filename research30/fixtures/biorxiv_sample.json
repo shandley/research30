@@ -1,0 +1,41 @@
+{
+  "messages": [{"status": "ok", "total": 3, "count": 3}],
+  "collection": [
+    {
+      "doi": "10.1101/2025.01.15.123456",
+      "title": "CRISPR-Cas9 gene editing efficiency in human T cells using novel guide RNA designs",
+      "authors": "Smith, J; Jones, A; Williams, B; Chen, C; Davis, D",
+      "abstract": "We present a novel approach to CRISPR gene editing that significantly improves efficiency in human T cells. Our guide RNA design strategy achieves 95% editing efficiency while maintaining low off-target effects. This has implications for cell therapy and gene therapy applications.",
+      "category": "Molecular Biology",
+      "date": "2025-01-15",
+      "published": "",
+      "published_doi": "",
+      "published_journal": "",
+      "source": "biorxiv"
+    },
+    {
+      "doi": "10.1101/2025.01.10.654321",
+      "title": "Single-cell RNA sequencing reveals heterogeneity in CRISPR-edited cell populations",
+      "authors": "Garcia, M; Lee, K; Patel, R",
+      "abstract": "Using single-cell RNA sequencing, we characterized the transcriptomic landscape of CRISPR-edited cell populations. Our analysis reveals significant heterogeneity in editing outcomes and identifies molecular markers that predict editing success.",
+      "category": "Genomics",
+      "date": "2025-01-10",
+      "published": "10.1038/s41586-025-00001-1",
+      "published_doi": "10.1038/s41586-025-00001-1",
+      "published_journal": "Nature",
+      "source": "biorxiv"
+    },
+    {
+      "doi": "10.1101/2025.01.08.111111",
+      "title": "Computational modeling of protein folding dynamics in aqueous solutions",
+      "authors": "Brown, T; Wilson, S",
+      "abstract": "We developed a new computational framework for modeling protein folding dynamics. Our approach combines molecular dynamics simulations with machine learning to predict folding pathways with high accuracy.",
+      "category": "Biophysics",
+      "date": "2025-01-08",
+      "published": "",
+      "published_doi": "",
+      "published_journal": "",
+      "source": "biorxiv"
+    }
+  ]
+}
