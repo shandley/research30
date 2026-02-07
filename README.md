@@ -6,12 +6,17 @@ No API keys are required for core functionality. All default sources use free, p
 
 ## What It Does
 
-Given a research topic, research30 queries all sources in parallel, scores results by relevance and academic signals, removes duplicates across sources, and outputs a ranked report. Typical queries complete in 1-2 seconds.
+Given a research topic, research30 queries all sources in parallel, scores results by relevance and academic signals, removes duplicates across sources, and outputs a ranked report. Typical queries complete in 2-5 seconds.
+
+The search pipeline layers three complementary strategies:
+- **Keyword search** -- OpenAlex (topic-augmented full-text search) and PubMed (explicit TIAB field-tagged queries with MeSH extraction)
+- **Semantic search** -- Semantic Scholar's embedding-based ranking finds conceptually related papers that don't share keywords
+- **Cross-source deduplication** -- DOI matching + Jaccard title similarity, keeping the most authoritative version of each paper
 
 Sources searched (default):
-- **OpenAlex** -- 250M+ scholarly works with full-text search. Covers journals, preprints (bioRxiv, medRxiv), conference papers, and more. This is the primary discovery source.
-- **Semantic Scholar** -- semantic search with citation graph data (requires free API key)
-- **PubMed** -- peer-reviewed journal articles via NCBI E-utilities
+- **OpenAlex** -- 250M+ scholarly works with topic-augmented full-text search. Discovers relevant topic clusters first, then searches within them. Covers journals, preprints (bioRxiv, medRxiv), conference papers, and more.
+- **Semantic Scholar** -- embedding-based semantic search with citation graph data (requires free API key)
+- **PubMed** -- peer-reviewed journal articles via NCBI E-utilities. Uses explicit `[TIAB]` field tags to avoid query misfires, extracts MeSH subject headings as structured metadata.
 - **arXiv** -- physics, math, CS, and quantitative biology preprints
 - **HuggingFace Hub** -- ML models, datasets, and daily papers
 
@@ -19,7 +24,15 @@ Additional sources (available on request):
 - **bioRxiv** -- biology preprints (direct API, slower due to full pagination)
 - **medRxiv** -- medical/clinical preprints (direct API, slower due to full pagination)
 
-### Why OpenAlex?
+### How Search Works
+
+**OpenAlex** uses a two-phase approach: first, a lightweight query to the Topics API discovers relevant topic clusters (e.g., "virome" maps to T11048 "Bacteriophages and microbial interactions"). Then the works search is constrained to those topics, combining ML-classified topic filtering with keyword relevance ranking. Each result carries its primary topic name and classifier confidence score.
+
+**PubMed** uses explicit `[TIAB]` (Title/Abstract) field tags instead of relying on PubMed's Automatic Term Mapping, which can misfire (e.g., "gut" matching the journal *Gut*). Multi-word topics get both exact-phrase and AND-combination queries: `("CRISPR gene editing"[TIAB] OR (CRISPR[TIAB] AND gene[TIAB] AND editing[TIAB]))`. MeSH (Medical Subject Headings) are extracted from article XML as structured metadata.
+
+**Semantic Scholar** provides embedding-based search -- it understands conceptual similarity, not just keyword matching. This catches papers that use different terminology for the same concept. Results are post-filtered with a higher relevance threshold (0.3 vs 0.1) since S2 does its own semantic ranking server-side.
+
+### Why OpenAlex as Primary?
 
 The bioRxiv/medRxiv APIs have no keyword search -- querying them requires paginating through *every* paper in the 30-day window and filtering locally. For a topic like "virome", this meant downloading 4,700+ papers (~15MB of JSON) just to find a handful of matches.
 
@@ -188,11 +201,11 @@ research30/
     research30.py       -- Main entry point and orchestrator
     lib/
       schema.py         -- Data models (OpenAlexItem, SemanticScholarItem, BiorxivItem, etc.)
-      openalex.py       -- OpenAlex API client (primary source)
-      semanticscholar.py -- Semantic Scholar API client
+      openalex.py       -- OpenAlex API client with topic discovery
+      semanticscholar.py -- Semantic Scholar API client (semantic search)
       biorxiv.py        -- bioRxiv and medRxiv API client (parallel pagination)
       arxiv.py          -- arXiv API client
-      pubmed.py         -- PubMed E-utilities client
+      pubmed.py         -- PubMed E-utilities client (TIAB queries, MeSH extraction)
       huggingface.py    -- HuggingFace Hub API client
       normalize.py      -- Raw data to schema conversion and keyword relevance
       score.py          -- Academic-signal scoring
@@ -200,11 +213,11 @@ research30/
       render.py         -- Output formatting (compact, markdown, JSON)
       cache.py          -- 24-hour result caching
       http.py           -- HTTP client (stdlib only)
-      xml_parse.py      -- arXiv Atom and PubMed XML parsers
+      xml_parse.py      -- arXiv Atom and PubMed XML/MeSH parsers
       dates.py          -- Date utilities
       env.py            -- Configuration loading
       ui.py             -- Terminal progress display
-  tests/                -- Unit tests (73 tests)
+  tests/                -- Unit tests (81 tests)
   fixtures/             -- Mock API responses for testing
 ```
 
