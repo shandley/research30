@@ -2,3 +2,5 @@ last30days-skill/
 __pycache__/
 *.pyc
 .pytest_cache/
+.playwright-mcp/
+*.png
