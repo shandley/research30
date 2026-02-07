@@ -122,11 +122,15 @@ echo 'NCBI_API_KEY=your_key_here' >> ~/.config/research30/.env
 
 Default output is a flat ranked list sorted by score (0-100). Each item includes score, title, source, date, URL, metadata, abstract snippet (first 200 chars), and relevance explanation. When used as a Claude Code skill, Claude reads these and synthesizes key findings, research fronts, methods, and gaps.
 
-Full structured data is also written to `~/.local/share/research30/out/`:
+**Script outputs** (written on every run to `~/.local/share/research30/out/`):
 - `report.html` — interactive HTML with score badges, source tags, collapsible abstracts
 - `report.json` — all results (not just top N)
 - `report.md` — formatted markdown
 - `context.md` — condensed context snippet
+
+**Skill outputs** (created by Claude when invoked via `/research30`):
+- `~/.local/share/research30/reports/{topic}-{date}.md` — full synthesis report
+- `~/.local/share/research30/research-log.md` — cumulative research journal
 
 Results are cached for 24 hours at `~/.cache/research30/`. Use `--refresh` to bypass.
 
@@ -188,7 +192,7 @@ research30/
       dates.py          -- Date utilities
       env.py            -- Configuration loading
       ui.py             -- Terminal progress display
-  tests/                -- Unit tests (90 tests)
+  tests/                -- Unit tests (103 tests)
   fixtures/             -- Mock API responses
 ```
 
