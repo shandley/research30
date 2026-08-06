@@ -1,0 +1,22 @@
+name: live-smoke
+
+# Weekly live check that every source still returns recent results.
+# The unit tests (offline, fixtures) run separately; this one makes real
+# network calls to catch upstream API drift before a user does.
+
+on:
+  schedule:
+    - cron: "0 13 * * 1"   # Mondays 13:00 UTC
+  workflow_dispatch: {}      # allow manual runs from the Actions tab
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run live smoke test
+        run: python3 research30/tests/smoke_test.py

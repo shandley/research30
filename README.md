@@ -169,6 +169,24 @@ python3 -m pytest tests/ -v
 
 All tests use bundled fixtures and make no network requests.
 
+### Live smoke test
+
+The unit tests never touch the network, so they cannot tell you when an
+upstream API changes its schema or endpoint. The smoke test does: it queries
+every source live and checks that each still returns recent results.
+
+```bash
+python3 research30/tests/smoke_test.py            # all sources
+python3 research30/tests/smoke_test.py --json     # machine-readable
+python3 research30/tests/smoke_test.py --sources=pubmed,arxiv
+```
+
+A source counts as failing (exit 1) if it returns zero results or a hard
+error. Rate limits and server-side hiccups (the keyless Semantic Scholar
+path hits HTTP 429 often) are reported as transient warnings and do not fail
+the run. `.github/workflows/smoke.yml` runs it every Monday and on demand
+from the Actions tab, so drift surfaces before a user hits it.
+
 ### Project Structure
 
 ```
