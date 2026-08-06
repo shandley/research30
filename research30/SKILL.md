@@ -1,6 +1,6 @@
 ---
 name: research30
-description: Research scientific papers from the last 30 days across OpenAlex, Semantic Scholar, PubMed, arXiv, and HuggingFace
+description: Research scientific papers from the last 30 days across OpenAlex, Semantic Scholar, PubMed, arXiv, bioRxiv, medRxiv, and HuggingFace
 argument-hint: "[research topic]"
 context: fork
 agent: Explore
@@ -12,7 +12,7 @@ allowed-tools: Bash, Read, Write, AskUserQuestion, WebSearch
 
 Search multiple academic databases for recent scientific papers, preprints, models, and datasets related to any topic.
 
-**Sources searched:** OpenAlex (250M+ works, topic-augmented), Semantic Scholar (semantic/embedding search), PubMed (peer-reviewed journals), arXiv (preprints), HuggingFace Hub (models/datasets).
+**Sources searched:** OpenAlex (250M+ works, topic-augmented), Semantic Scholar (semantic/embedding search), PubMed (peer-reviewed journals), arXiv (preprints), bioRxiv and medRxiv (biology and health preprints via Europe PMC), HuggingFace Hub (models/datasets).
 
 **No API keys required.** Optionally set `S2_API_KEY` for Semantic Scholar and `NCBI_API_KEY` for faster PubMed.
 
@@ -29,10 +29,12 @@ Depth options:
 
 Source filtering:
 - `--sources=all` (default) - All sources
-- `--sources=preprints` - bioRxiv + medRxiv + arXiv only
+- `--sources=preprints` - arXiv + bioRxiv + medRxiv only
 - `--sources=pubmed` - PubMed only
 - `--sources=huggingface` - HuggingFace only
 - `--sources=arxiv` - arXiv only
+- `--sources=biorxiv` - bioRxiv only
+- `--sources=medrxiv` - medRxiv only
 - `--sources=openalex` - OpenAlex only
 - `--sources=semanticscholar` - Semantic Scholar only
 

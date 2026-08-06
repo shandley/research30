@@ -53,6 +53,8 @@ SOURCE_QUERIES = {
     "pubmed": "cancer",
     "arxiv": "neural network",
     "huggingface": "language model",
+    "biorxiv": "cancer",
+    "medrxiv": "cancer",
 }
 
 
@@ -76,7 +78,7 @@ def run_source(source: str, query: str, timeout: int, retries: int = 2) -> dict:
                     sys.executable, str(SCRIPT), query,
                     f"--sources={source}", "--quick", "--refresh", "--emit=json",
                 ],
-                capture_output=True, text=True, timeout=timeout,
+                capture_output=True, text=True, timeout=timeout, check=False,
             )
             if proc.returncode != 0:
                 tail = (proc.stderr or "").strip().splitlines()[-1:] or ["nonzero exit"]

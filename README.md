@@ -56,9 +56,11 @@ This outputs the raw ranked list. Claude Code adds the synthesis layer on top.
 | **Semantic Scholar** | Embedding-based semantic search | Conceptual matching beyond keywords (needs free API key) |
 | **PubMed** | Peer-reviewed journal articles | TIAB field-tagged queries with MeSH metadata |
 | **arXiv** | Physics, math, CS, q-bio preprints | Atom API keyword search |
+| **bioRxiv** | Biology preprints | Keyword search via Europe PMC |
+| **medRxiv** | Health sciences preprints | Keyword search via Europe PMC |
 | **HuggingFace** | ML models, datasets, daily papers | Hub API |
 
-Additional sources available via `--sources=biorxiv` or `--sources=medrxiv` (slower, direct API pagination).
+All seven sources run by default. bioRxiv and medRxiv matter for the last-30-days window specifically: OpenAlex indexes preprints but lags on ingestion and ranks them low, so recent preprints are often missing from its top results. Querying the two servers directly (through Europe PMC's keyword search) surfaces them.
 
 ## Usage
 
@@ -158,6 +160,8 @@ Cross-source deduplication uses DOI matching + Jaccard title similarity. Priorit
 
 **Semantic Scholar** provides embedding-based search — catches papers that use different terminology for the same concept. Post-filtered with a higher relevance threshold (0.3 vs 0.1).
 
+**bioRxiv and medRxiv** are searched through Europe PMC, which indexes both servers and supports real keyword queries with a `PUBLISHER` filter. The native bioRxiv API only lists preprints by date with no search, which meant downloading thousands of preprints per month and filtering locally. Europe PMC returns matches in one query and separates the two servers cleanly.
+
 ## Development
 
 ### Running Tests
@@ -200,7 +204,7 @@ research30/
       pubmed.py         -- PubMed E-utilities (TIAB queries, MeSH)
       arxiv.py          -- arXiv Atom API
       huggingface.py    -- HuggingFace Hub API
-      biorxiv.py        -- bioRxiv/medRxiv API (parallel pagination)
+      biorxiv.py        -- bioRxiv/medRxiv search via Europe PMC
       schema.py         -- Data models
       normalize.py      -- Schema conversion + keyword relevance
       score.py          -- Academic-signal scoring
@@ -212,7 +216,7 @@ research30/
       dates.py          -- Date utilities
       env.py            -- Configuration loading
       ui.py             -- Terminal progress display
-  tests/                -- Unit tests (103 tests)
+  tests/                -- Unit tests (104 tests) + live smoke test
   fixtures/             -- Mock API responses
 ```
 

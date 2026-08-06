@@ -59,12 +59,17 @@ def load_fixture(name: str):
     return None
 
 
+def _biorxiv_mock_results(mock_data):
+    """Extract the Europe PMC result list from the bundled fixture."""
+    return (mock_data or {}).get('resultList', {}).get('result', [])
+
+
 def _search_biorxiv(topic, from_date, to_date, depth, mock):
     """Search bioRxiv (runs in thread)."""
     if mock:
         mock_data = load_fixture("biorxiv_sample.json")
         if mock_data:
-            return biorxiv.search_biorxiv(topic, from_date, to_date, depth, mock_data=mock_data.get('collection', []))
+            return biorxiv.search_biorxiv(topic, from_date, to_date, depth, mock_data=_biorxiv_mock_results(mock_data))
     return biorxiv.search_biorxiv(topic, from_date, to_date, depth)
 
 
@@ -73,7 +78,7 @@ def _search_medrxiv(topic, from_date, to_date, depth, mock):
     if mock:
         mock_data = load_fixture("biorxiv_sample.json")
         if mock_data:
-            return biorxiv.search_medrxiv(topic, from_date, to_date, depth, mock_data=mock_data.get('collection', []))
+            return biorxiv.search_medrxiv(topic, from_date, to_date, depth, mock_data=_biorxiv_mock_results(mock_data))
     return biorxiv.search_medrxiv(topic, from_date, to_date, depth)
 
 
@@ -134,8 +139,8 @@ def _search_semanticscholar(topic, from_date, to_date, depth, mock, api_key):
 def determine_sources(requested: str) -> set:
     """Determine which sources to query."""
     source_map = {
-        'all': {'openalex', 'semanticscholar', 'arxiv', 'pubmed', 'huggingface'},
-        'preprints': {'openalex', 'arxiv'},
+        'all': {'openalex', 'semanticscholar', 'arxiv', 'pubmed', 'huggingface', 'biorxiv', 'medrxiv'},
+        'preprints': {'arxiv', 'biorxiv', 'medrxiv'},
         'openalex': {'openalex'},
         'semanticscholar': {'semanticscholar'},
         'biorxiv': {'biorxiv'},
@@ -188,7 +193,7 @@ def run_research(
     if 'huggingface' in sources_set:
         search_funcs['huggingface'] = lambda: _search_huggingface(topic, from_date, to_date, depth, mock)
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=max(len(search_funcs), 1)) as executor:
         futures = {}
         for source, func in search_funcs.items():
             if progress:
