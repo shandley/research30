@@ -143,15 +143,16 @@ Results are cached for 24 hours at `~/.cache/research30/`. Use `--refresh` to by
 
 ## How Scoring Works
 
-Each result is scored 0-100:
+Each result is scored 0-100, the same way for every source:
 
-**Papers** (50% relevance + 25% recency + 25% academic signal):
-- Keyword relevance: title match 2x weighted, bigram matching for multi-word queries, position boost for OpenAlex/S2 results
-- Recency: newer = higher
-- Academic: peer review, citations, journal, author count
+```
+score = 0.70 * relevance + 0.30 * recency   (minus 10 for a low-confidence date)
+```
 
-**HuggingFace** (45% relevance + 25% recency + 30% engagement):
-- Downloads and likes as engagement signal
+- **Relevance:** keyword match to the topic and its aliases. Title match is 2x weighted, with bigram matching for multi-word queries.
+- **Recency:** newer = higher, within the 30-day window.
+
+The score deliberately leaves out a quality or impact term. In a 30-day window almost every paper has zero citations, so a per-source "academic" component collapsed into a constant (PubMed always 60, arXiv always 30) and became a hidden source prior, ranking a paper above a preprint just for its database. Quality and reliability signals are still carried on each result and shown as badges (peer-reviewed, journal, citation count, downloads) for you and the synthesis step to weigh, rather than folded into the number.
 
 Cross-source deduplication uses DOI matching + Jaccard title similarity. Priority: PubMed > S2 > OpenAlex > bioRxiv > medRxiv > arXiv > HuggingFace.
 

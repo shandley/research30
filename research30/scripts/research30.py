@@ -27,6 +27,10 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).parent.resolve()
 sys.path.insert(0, str(SCRIPT_DIR))
 
+# Bump when the scoring formula changes so cached reports are not served with
+# stale numbers (the cache stores computed scores, it does not recompute).
+SCORING_VERSION = "2"
+
 from lib import (
     arxiv,
     biorxiv,
@@ -277,8 +281,9 @@ def main():
     # Determine sources
     sources_set = determine_sources(args.sources)
 
-    # Check cache (aliases change the result set, so they must vary the key)
-    cache_scope = f"{args.sources}|aliases={args.aliases}"
+    # Check cache. Aliases change the result set and the scoring version changes
+    # the numbers, so both must vary the key or a warm cache serves stale output.
+    cache_scope = f"{args.sources}|aliases={args.aliases}|scoring={SCORING_VERSION}"
     cache_key = cache.get_cache_key(args.topic, from_date, to_date, cache_scope)
     if not args.mock and not args.refresh:
         cached_data, cache_age = cache.load_cache_with_age(cache_key)

@@ -127,13 +127,13 @@ mkdir -p ~/.local/share/research30/reports
 [List the top 10 papers by score with title, source, date, URL, and a one-line description of what it contributes]
 
 ---
-*Based on {N} papers from {sources}. Scores reflect relevance + recency + academic signals.*
+*Based on {N} papers from {sources}. Scores reflect relevance + recency; quality signals (peer-review, journal, citations) are shown as badges.*
 ```
 
 Key principles for synthesis:
 - **Be specific.** Reference actual papers by title.
 - **Synthesize, don't summarize.** Identify patterns, contradictions, and trends across papers.
-- **Prioritize by score but verify with abstracts.** A score of 85 means high relevance + recency + academic signal, but the abstract tells you *what* is relevant.
+- **Prioritize by score but verify with abstracts.** A score of 85 means high relevance and recency, but the abstract tells you *what* is relevant. Peer-review and citation badges tell you how established it is.
 - **Flag limitations.** If results are sparse or heavily weighted to one source, note this.
 
 ## Step 5: Append to the research log
