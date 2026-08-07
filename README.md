@@ -8,7 +8,9 @@ A skill for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Anthr
 /research30 large language model alignment
 ```
 
-Claude searches 5 academic databases in parallel, scores and deduplicates results, then synthesizes key findings, trends, and gaps from the top 25 papers.
+Claude searches 7 academic databases in parallel, scores and deduplicates results, then synthesizes key findings, trends, and gaps from the top 25 papers.
+
+> **Working as of 2026-08-07.** All seven sources were verified live on this date, and a weekly [smoke test](#live-smoke-test) checks them so upstream API changes surface here rather than in your results.
 
 ## Quick Start
 
