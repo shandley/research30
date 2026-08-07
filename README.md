@@ -74,6 +74,7 @@ python3 research30/scripts/research30.py <topic> [options]
 |------|-------------|
 | `--quick` | Faster: fewer API results, shows top 10 |
 | `--deep` | Thorough: more API results, shows top 50 |
+| `--aliases=LIST` | Semicolon-separated synonym phrases to OR into the search and score (e.g. `--aliases "myocardial infarction; MI"`) |
 | `--refresh` | Bypass 24h cache, fetch fresh results |
 | `--sources=MODE` | `all` (default), `preprints`, `pubmed`, `huggingface`, `openalex`, `semanticscholar`, `biorxiv`, `medrxiv`, `arxiv` |
 | `--emit=MODE` | `compact` (default), `html`, `json`, `md`, `context`, `path` |
@@ -164,6 +165,8 @@ Cross-source deduplication uses DOI matching + Jaccard title similarity. Priorit
 
 **bioRxiv and medRxiv** are searched through Europe PMC, which indexes both servers and supports real keyword queries with a `PUBLISHER` filter. The native bioRxiv API only lists preprints by date with no search, which meant downloading thousands of preprints per month and filtering locally. Europe PMC returns matches in one query and separates the two servers cleanly.
 
+**Query expansion.** Keyword sources only return papers that use the exact terms searched, so "heart attack" misses papers that say only "myocardial infarction." When invoked as a Claude Code skill, Claude generates synonym phrases for the topic and passes them via `--aliases`. These are OR'd into the query for the keyword sources (PubMed, arXiv, bioRxiv, medRxiv) and credited in relevance scoring for every source. The topic is matched as a substring; aliases are matched on word boundaries so a short alias like "MI" does not match inside "administration." When an alias is what matched a paper, the relevance explanation names it.
+
 ## Development
 
 ### Running Tests
@@ -218,7 +221,7 @@ research30/
       dates.py          -- Date utilities
       env.py            -- Configuration loading
       ui.py             -- Terminal progress display
-  tests/                -- Unit tests (104 tests) + live smoke test
+  tests/                -- Unit tests (111 tests) + live smoke test
   fixtures/             -- Mock API responses
 ```
 

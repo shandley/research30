@@ -8,7 +8,22 @@ from . import dates, schema
 T = TypeVar("T", schema.BiorxivItem, schema.ArxivItem, schema.PubmedItem, schema.HuggingFaceItem, schema.OpenAlexItem, schema.SemanticScholarItem)
 
 
-def _count_bigram_matches(topic_words: list, text: str) -> int:
+def _present(text_lower: str, needle: str, word_boundary: bool) -> bool:
+    """Test whether needle appears in text.
+
+    Substring match by default (the topic path, unchanged). With
+    word_boundary=True the needle must sit on word boundaries, so the alias
+    "MI" no longer matches inside "administration". Used for aliases, where
+    substring false positives would compound across every synonym.
+    """
+    if not needle:
+        return False
+    if word_boundary:
+        return re.search(r'\b' + re.escape(needle) + r'\b', text_lower) is not None
+    return needle in text_lower
+
+
+def _count_bigram_matches(topic_words: list, text: str, word_boundary: bool = False) -> int:
     """Count how many consecutive topic word pairs appear together in text.
 
     For topic "labor market AI impacts", bigrams are:
@@ -21,65 +36,69 @@ def _count_bigram_matches(topic_words: list, text: str) -> int:
     count = 0
     for i in range(len(topic_words) - 1):
         bigram = f"{topic_words[i]} {topic_words[i+1]}"
-        if bigram in text_lower:
+        if _present(text_lower, bigram, word_boundary):
             count += 1
     return count
 
 
-def compute_keyword_relevance(topic: str, title: str, abstract: str) -> Tuple[float, str]:
-    """Compute keyword relevance score from topic against title+abstract.
+def _score_single_phrase(
+    phrase: str, title: str, abstract: str, word_boundary: bool = False,
+) -> Tuple[float, str]:
+    """Score one phrase against title+abstract.
 
-    Tokenizes topic into words, matches against title (2x weight) + abstract (1x).
-    Boosts for exact phrase match, bigram matches, and all-words-present.
+    Tokenizes the phrase into words, matches against title (2x weight) +
+    abstract (1x). Boosts for exact phrase match, bigram matches, and
+    all-words-present. word_boundary controls substring vs whole-word matching
+    (see _present).
 
     Returns:
         Tuple of (score 0.0-1.0, explanation string)
     """
-    if not topic:
+    if not phrase:
         return 0.0, "no topic"
 
-    topic_lower = topic.lower()
+    phrase_lower = phrase.lower()
     title_lower = title.lower() if title else ''
     abstract_lower = abstract.lower() if abstract else ''
 
-    # Tokenize topic into words
-    topic_words = re.findall(r'\w+', topic_lower)
-    if not topic_words:
+    # Tokenize phrase into words
+    phrase_words = re.findall(r'\w+', phrase_lower)
+    if not phrase_words:
         return 0.0, "no topic words"
 
     score = 0.0
     reasons = []
 
     # Exact phrase match (strongest signal)
-    if topic_lower in title_lower:
+    if _present(title_lower, phrase_lower, word_boundary):
         score += 0.4
         reasons.append("exact phrase in title")
-    elif topic_lower in abstract_lower:
+    elif _present(abstract_lower, phrase_lower, word_boundary):
         score += 0.2
         reasons.append("exact phrase in abstract")
 
     # Word-level matching
-    title_word_matches = sum(1 for w in topic_words if w in title_lower)
-    abstract_word_matches = sum(1 for w in topic_words if w in abstract_lower)
+    title_word_matches = sum(1 for w in phrase_words if _present(title_lower, w, word_boundary))
+    abstract_word_matches = sum(1 for w in phrase_words if _present(abstract_lower, w, word_boundary))
 
     # Title matches (2x weight)
-    title_ratio = title_word_matches / len(topic_words) if topic_words else 0
-    abstract_ratio = abstract_word_matches / len(topic_words) if topic_words else 0
+    title_ratio = title_word_matches / len(phrase_words) if phrase_words else 0
+    abstract_ratio = abstract_word_matches / len(phrase_words) if phrase_words else 0
 
     word_score = (title_ratio * 0.3 * 2) + (abstract_ratio * 0.3)
     score += word_score
 
     if title_word_matches > 0:
-        reasons.append(f"{title_word_matches}/{len(topic_words)} words in title")
+        reasons.append(f"{title_word_matches}/{len(phrase_words)} words in title")
     if abstract_word_matches > 0:
-        reasons.append(f"{abstract_word_matches}/{len(topic_words)} words in abstract")
+        reasons.append(f"{abstract_word_matches}/{len(phrase_words)} words in abstract")
 
-    # Bigram matching — consecutive topic words appearing together
+    # Bigram matching — consecutive phrase words appearing together
     # This rewards "labor market" over "labor" + unrelated "market"
-    if len(topic_words) >= 2:
-        max_bigrams = len(topic_words) - 1
-        title_bigrams = _count_bigram_matches(topic_words, title_lower)
-        abstract_bigrams = _count_bigram_matches(topic_words, abstract_lower)
+    if len(phrase_words) >= 2:
+        max_bigrams = len(phrase_words) - 1
+        title_bigrams = _count_bigram_matches(phrase_words, title_lower, word_boundary)
+        abstract_bigrams = _count_bigram_matches(phrase_words, abstract_lower, word_boundary)
         bigram_ratio = max(
             title_bigrams / max_bigrams,
             abstract_bigrams / max_bigrams * 0.5,
@@ -91,8 +110,8 @@ def compute_keyword_relevance(topic: str, title: str, abstract: str) -> Tuple[fl
             reasons.append(f"{total_bigrams}/{max_bigrams} bigrams matched")
 
     # All-words-present bonus
-    all_in_title = title_word_matches == len(topic_words)
-    all_in_abstract = abstract_word_matches == len(topic_words)
+    all_in_title = title_word_matches == len(phrase_words)
+    all_in_abstract = abstract_word_matches == len(phrase_words)
     if all_in_title:
         score += 0.1
         reasons.append("all words in title")
@@ -104,6 +123,38 @@ def compute_keyword_relevance(topic: str, title: str, abstract: str) -> Tuple[fl
     why = '; '.join(reasons) if reasons else "low keyword match"
 
     return round(score, 3), why
+
+
+def compute_keyword_relevance(
+    topic: str, title: str, abstract: str, aliases: Optional[List[str]] = None,
+) -> Tuple[float, str]:
+    """Compute keyword relevance of title+abstract to the topic and its aliases.
+
+    The score is the max over the topic and each alias, not the sum: a paper
+    matching the topic plus three synonyms scores the same as one matching a
+    single synonym, since the aliases are meant to be restatements of the same
+    concept, not independent evidence. The topic keeps substring matching
+    (unchanged); aliases use whole-word matching to contain false positives.
+
+    Returns:
+        Tuple of (score 0.0-1.0, explanation string). When an alias wins, the
+        explanation names it so the match stays transparent to the reader.
+    """
+    score, why = _score_single_phrase(topic, title, abstract, word_boundary=False)
+
+    winning_alias = None
+    for alias in (aliases or []):
+        a = alias.strip()
+        if not a:
+            continue
+        alias_score, alias_why = _score_single_phrase(a, title, abstract, word_boundary=True)
+        if alias_score > score:
+            score, why, winning_alias = alias_score, alias_why, a
+
+    if winning_alias:
+        why = f"via alias '{winning_alias}': {why}"
+
+    return score, why
 
 
 def filter_by_date_range(

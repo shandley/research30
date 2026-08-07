@@ -52,6 +52,48 @@ def test_compute_keyword_relevance_abstract_match():
     assert "abstract" in why.lower()
 
 
+def test_alias_surfaces_synonym_only_paper():
+    """A paper matching only a synonym should score via the alias."""
+    base, _ = normalize.compute_keyword_relevance(
+        "heart attack", "Myocardial infarction outcomes in adults", "",
+    )
+    aliased, why = normalize.compute_keyword_relevance(
+        "heart attack", "Myocardial infarction outcomes in adults", "",
+        aliases=["myocardial infarction"],
+    )
+    assert aliased > base
+    assert "myocardial infarction" in why  # names the winning alias
+
+
+def test_alias_word_boundary_guard():
+    """A short alias must not substring-match unrelated words."""
+    score, _ = normalize.compute_keyword_relevance(
+        "heart attack", "Drug administration in families", "",
+        aliases=["MI"],
+    )
+    assert score == 0.0
+
+
+def test_alias_does_not_lower_topic_score():
+    """Aliases can only raise the score (max), never lower a strong topic match."""
+    base, _ = normalize.compute_keyword_relevance(
+        "heart attack", "Heart attack risk factors", "",
+    )
+    aliased, _ = normalize.compute_keyword_relevance(
+        "heart attack", "Heart attack risk factors", "",
+        aliases=["myocardial infarction"],
+    )
+    assert aliased == base
+
+
+def test_empty_aliases_match_topic_only():
+    """Passing empty/blank aliases is identical to passing none."""
+    a, _ = normalize.compute_keyword_relevance("crispr", "CRISPR editing", "")
+    b, _ = normalize.compute_keyword_relevance("crispr", "CRISPR editing", "", aliases=[])
+    c, _ = normalize.compute_keyword_relevance("crispr", "CRISPR editing", "", aliases=["  "])
+    assert a == b == c
+
+
 def test_normalize_biorxiv_items():
     """Test normalizing bioRxiv items to schema."""
     raw = [{

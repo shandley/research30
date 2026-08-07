@@ -79,12 +79,13 @@ def _map_result(result: Dict[str, Any], server: str) -> Dict[str, Any]:
 
 
 def _score_and_filter(topic: str, raw_items: List[Dict[str, Any]], server: str,
-                      max_relevant: int) -> List[Dict[str, Any]]:
+                      max_relevant: int,
+                      aliases: Optional[List[str]] = None) -> List[Dict[str, Any]]:
     """Attach relevance to mapped items and keep the relevant ones."""
     matches = []
     for item in raw_items:
         rel, why = norm_mod.compute_keyword_relevance(
-            topic, item.get("title", ""), item.get("abstract", ""),
+            topic, item.get("title", ""), item.get("abstract", ""), aliases=aliases,
         )
         if rel > RELEVANCE_THRESHOLD:
             item["relevance"] = rel
@@ -102,6 +103,7 @@ def search_preprint_server(
     from_date: str,
     to_date: str,
     depth: str = "default",
+    aliases: Optional[List[str]] = None,
     mock_data: Optional[List[Dict[str, Any]]] = None,
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """Search a preprint server (biorxiv or medrxiv) for a topic via Europe PMC.
@@ -112,6 +114,7 @@ def search_preprint_server(
         from_date: Start date (YYYY-MM-DD)
         to_date: End date (YYYY-MM-DD)
         depth: "quick", "default", or "deep"
+        aliases: Optional synonym phrases, OR'd into the query and scored
         mock_data: Optional list of Europe PMC result dicts for testing
 
     Returns:
@@ -121,14 +124,17 @@ def search_preprint_server(
 
     if mock_data is not None:
         mapped = [_map_result(r, server) for r in mock_data]
-        return _score_and_filter(topic, mapped, server, max_relevant), None
+        return _score_and_filter(topic, mapped, server, max_relevant, aliases), None
 
     publisher = _PUBLISHER.get(server)
     if publisher is None:
         return [], f"unknown preprint server: {server}"
 
+    # OR the topic with each alias so synonym-only preprints are retrieved.
+    phrases = [topic] + [a.strip() for a in (aliases or []) if a.strip()]
+    terms = " OR ".join(f"({p})" for p in phrases)
     query = (
-        f'({topic}) AND PUBLISHER:"{publisher}" '
+        f'({terms}) AND PUBLISHER:"{publisher}" '
         f'AND (FIRST_PDATE:[{from_date} TO {to_date}])'
     )
 
@@ -164,9 +170,9 @@ def search_preprint_server(
                 # Enough raw candidates to fill the depth limit after filtering.
                 break
     except Exception as e:
-        return _score_and_filter(topic, results, server, max_relevant), f"{type(e).__name__}: {e}"
+        return _score_and_filter(topic, results, server, max_relevant, aliases), f"{type(e).__name__}: {e}"
 
-    return _score_and_filter(topic, results, server, max_relevant), None
+    return _score_and_filter(topic, results, server, max_relevant, aliases), None
 
 
 def search_biorxiv(
@@ -174,10 +180,11 @@ def search_biorxiv(
     from_date: str,
     to_date: str,
     depth: str = "default",
+    aliases: Optional[List[str]] = None,
     mock_data: Optional[List[Dict[str, Any]]] = None,
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """Search bioRxiv for a topic."""
-    return search_preprint_server("biorxiv", topic, from_date, to_date, depth, mock_data)
+    return search_preprint_server("biorxiv", topic, from_date, to_date, depth, aliases, mock_data)
 
 
 def search_medrxiv(
@@ -185,7 +192,8 @@ def search_medrxiv(
     from_date: str,
     to_date: str,
     depth: str = "default",
+    aliases: Optional[List[str]] = None,
     mock_data: Optional[List[Dict[str, Any]]] = None,
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """Search medRxiv for a topic."""
-    return search_preprint_server("medrxiv", topic, from_date, to_date, depth, mock_data)
+    return search_preprint_server("medrxiv", topic, from_date, to_date, depth, aliases, mock_data)

@@ -64,47 +64,48 @@ def _biorxiv_mock_results(mock_data):
     return (mock_data or {}).get('resultList', {}).get('result', [])
 
 
-def _search_biorxiv(topic, from_date, to_date, depth, mock):
+def _search_biorxiv(topic, from_date, to_date, depth, mock, aliases=None):
     """Search bioRxiv (runs in thread)."""
     if mock:
         mock_data = load_fixture("biorxiv_sample.json")
         if mock_data:
-            return biorxiv.search_biorxiv(topic, from_date, to_date, depth, mock_data=_biorxiv_mock_results(mock_data))
-    return biorxiv.search_biorxiv(topic, from_date, to_date, depth)
+            return biorxiv.search_biorxiv(topic, from_date, to_date, depth, aliases=aliases, mock_data=_biorxiv_mock_results(mock_data))
+    return biorxiv.search_biorxiv(topic, from_date, to_date, depth, aliases=aliases)
 
 
-def _search_medrxiv(topic, from_date, to_date, depth, mock):
+def _search_medrxiv(topic, from_date, to_date, depth, mock, aliases=None):
     """Search medRxiv (runs in thread)."""
     if mock:
         mock_data = load_fixture("biorxiv_sample.json")
         if mock_data:
-            return biorxiv.search_medrxiv(topic, from_date, to_date, depth, mock_data=_biorxiv_mock_results(mock_data))
-    return biorxiv.search_medrxiv(topic, from_date, to_date, depth)
+            return biorxiv.search_medrxiv(topic, from_date, to_date, depth, aliases=aliases, mock_data=_biorxiv_mock_results(mock_data))
+    return biorxiv.search_medrxiv(topic, from_date, to_date, depth, aliases=aliases)
 
 
-def _search_arxiv(topic, from_date, to_date, depth, mock):
+def _search_arxiv(topic, from_date, to_date, depth, mock, aliases=None):
     """Search arXiv (runs in thread)."""
     if mock:
         mock_data = load_fixture("arxiv_sample.xml")
         if mock_data:
-            return arxiv.search_arxiv(topic, from_date, to_date, depth, mock_data=mock_data)
-    return arxiv.search_arxiv(topic, from_date, to_date, depth)
+            return arxiv.search_arxiv(topic, from_date, to_date, depth, aliases=aliases, mock_data=mock_data)
+    return arxiv.search_arxiv(topic, from_date, to_date, depth, aliases=aliases)
 
 
-def _search_pubmed(topic, from_date, to_date, depth, mock, api_key):
+def _search_pubmed(topic, from_date, to_date, depth, mock, api_key, aliases=None):
     """Search PubMed (runs in thread)."""
     if mock:
         mock_esearch = load_fixture("pubmed_esearch_sample.json")
         mock_efetch = load_fixture("pubmed_efetch_sample.xml")
         return pubmed.search_pubmed(topic, from_date, to_date, depth,
-                                    api_key=api_key,
+                                    api_key=api_key, aliases=aliases,
                                     mock_esearch=mock_esearch,
                                     mock_efetch=mock_efetch)
-    return pubmed.search_pubmed(topic, from_date, to_date, depth, api_key=api_key)
+    return pubmed.search_pubmed(topic, from_date, to_date, depth, api_key=api_key, aliases=aliases)
 
 
 def _search_huggingface(topic, from_date, to_date, depth, mock):
-    """Search HuggingFace (runs in thread)."""
+    """Search HuggingFace (runs in thread). Alias expansion does not apply
+    to HuggingFace, whose search is over model/dataset names."""
     if mock:
         mock_models = load_fixture("hf_models_sample.json")
         mock_papers = load_fixture("hf_papers_sample.json")
@@ -114,26 +115,26 @@ def _search_huggingface(topic, from_date, to_date, depth, mock):
     return huggingface.search_huggingface(topic, from_date, to_date, depth)
 
 
-def _search_openalex(topic, from_date, to_date, depth, mock, topic_ids=None):
+def _search_openalex(topic, from_date, to_date, depth, mock, topic_ids=None, aliases=None):
     """Search OpenAlex (runs in thread)."""
     if mock:
         mock_data = load_fixture("openalex_sample.json")
         if mock_data:
             return openalex.search_openalex(topic, from_date, to_date, depth,
-                                            mock_data=mock_data.get('results', []))
-    return openalex.search_openalex(topic, from_date, to_date, depth, topic_ids=topic_ids)
+                                            aliases=aliases, mock_data=mock_data.get('results', []))
+    return openalex.search_openalex(topic, from_date, to_date, depth, aliases=aliases, topic_ids=topic_ids)
 
 
-def _search_semanticscholar(topic, from_date, to_date, depth, mock, api_key):
+def _search_semanticscholar(topic, from_date, to_date, depth, mock, api_key, aliases=None):
     """Search Semantic Scholar (runs in thread)."""
     if mock:
         mock_data = load_fixture("semanticscholar_sample.json")
         if mock_data:
             return semanticscholar.search_semantic_scholar(
                 topic, from_date, to_date, depth,
-                api_key=api_key, mock_data=mock_data.get('data', []))
+                api_key=api_key, aliases=aliases, mock_data=mock_data.get('data', []))
     return semanticscholar.search_semantic_scholar(
-        topic, from_date, to_date, depth, api_key=api_key)
+        topic, from_date, to_date, depth, api_key=api_key, aliases=aliases)
 
 
 def determine_sources(requested: str) -> set:
@@ -161,6 +162,7 @@ def run_research(
     depth: str = "default",
     mock: bool = False,
     progress: ui.ProgressDisplay = None,
+    aliases: list = None,
 ) -> dict:
     """Run the research pipeline across all sources in parallel.
 
@@ -179,17 +181,17 @@ def run_research(
     # Build futures
     search_funcs = {}
     if 'openalex' in sources_set:
-        search_funcs['openalex'] = lambda: _search_openalex(topic, from_date, to_date, depth, mock, topic_ids)
+        search_funcs['openalex'] = lambda: _search_openalex(topic, from_date, to_date, depth, mock, topic_ids, aliases)
     if 'semanticscholar' in sources_set:
-        search_funcs['semanticscholar'] = lambda: _search_semanticscholar(topic, from_date, to_date, depth, mock, s2_key)
+        search_funcs['semanticscholar'] = lambda: _search_semanticscholar(topic, from_date, to_date, depth, mock, s2_key, aliases)
     if 'biorxiv' in sources_set:
-        search_funcs['biorxiv'] = lambda: _search_biorxiv(topic, from_date, to_date, depth, mock)
+        search_funcs['biorxiv'] = lambda: _search_biorxiv(topic, from_date, to_date, depth, mock, aliases)
     if 'medrxiv' in sources_set:
-        search_funcs['medrxiv'] = lambda: _search_medrxiv(topic, from_date, to_date, depth, mock)
+        search_funcs['medrxiv'] = lambda: _search_medrxiv(topic, from_date, to_date, depth, mock, aliases)
     if 'arxiv' in sources_set:
-        search_funcs['arxiv'] = lambda: _search_arxiv(topic, from_date, to_date, depth, mock)
+        search_funcs['arxiv'] = lambda: _search_arxiv(topic, from_date, to_date, depth, mock, aliases)
     if 'pubmed' in sources_set:
-        search_funcs['pubmed'] = lambda: _search_pubmed(topic, from_date, to_date, depth, mock, ncbi_key)
+        search_funcs['pubmed'] = lambda: _search_pubmed(topic, from_date, to_date, depth, mock, ncbi_key, aliases)
     if 'huggingface' in sources_set:
         search_funcs['huggingface'] = lambda: _search_huggingface(topic, from_date, to_date, depth, mock)
 
@@ -237,6 +239,9 @@ def main():
         default="all",
         help="Source filter",
     )
+    parser.add_argument("--aliases", default="",
+                        help="Semicolon-separated synonym phrases to OR into the search and score "
+                             "(e.g. --aliases 'myocardial infarction; MI')")
     parser.add_argument("--quick", action="store_true", help="Fewer results per source")
     parser.add_argument("--deep", action="store_true", help="More results per source")
     parser.add_argument("--refresh", action="store_true", help="Bypass cache, fetch fresh results")
@@ -255,6 +260,9 @@ def main():
 
     depth = "quick" if args.quick else ("deep" if args.deep else "default")
 
+    # Synonym phrases to OR into the search and score (LLM-supplied via the skill)
+    aliases = [a.strip() for a in args.aliases.split(';') if a.strip()]
+
     if not args.topic:
         print("Error: Please provide a research topic.", file=sys.stderr)
         print("Usage: python3 research30.py <topic> [options]", file=sys.stderr)
@@ -269,8 +277,9 @@ def main():
     # Determine sources
     sources_set = determine_sources(args.sources)
 
-    # Check cache
-    cache_key = cache.get_cache_key(args.topic, from_date, to_date, args.sources)
+    # Check cache (aliases change the result set, so they must vary the key)
+    cache_scope = f"{args.sources}|aliases={args.aliases}"
+    cache_key = cache.get_cache_key(args.topic, from_date, to_date, cache_scope)
     if not args.mock and not args.refresh:
         cached_data, cache_age = cache.load_cache_with_age(cache_key)
         if cached_data:
@@ -296,7 +305,7 @@ def main():
     # Run research
     raw_results = run_research(
         args.topic, sources_set, config,
-        from_date, to_date, depth, args.mock, progress,
+        from_date, to_date, depth, args.mock, progress, aliases,
     )
 
     # Processing phase

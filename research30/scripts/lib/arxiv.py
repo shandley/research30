@@ -18,11 +18,21 @@ DEPTH_LIMITS = {
 }
 
 
+def _arxiv_term(phrase: str) -> str:
+    """Build one `all:` search term for a phrase (quoted if multi-word)."""
+    words = phrase.strip().split()
+    if len(words) > 1:
+        quoted = '"' + phrase + '"'
+        return f'all:{quote(quoted)}'
+    return f'all:{quote(phrase)}'
+
+
 def search_arxiv(
     topic: str,
     from_date: str,
     to_date: str,
     depth: str = "default",
+    aliases: Optional[List[str]] = None,
     mock_data: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """Search arXiv for papers matching a topic.
@@ -32,6 +42,7 @@ def search_arxiv(
         from_date: Start date (YYYY-MM-DD)
         to_date: End date (YYYY-MM-DD)
         depth: "quick", "default", or "deep"
+        aliases: Optional synonym phrases, OR'd into the query and scored
         mock_data: Optional mock XML string for testing
 
     Returns:
@@ -39,6 +50,7 @@ def search_arxiv(
     """
     max_results = DEPTH_LIMITS.get(depth, DEPTH_LIMITS['default'])
     error = None
+    alias_terms = [a.strip() for a in (aliases or []) if a.strip()]
 
     if mock_data is not None:
         papers = xml_parse.parse_arxiv_atom(mock_data)
@@ -47,6 +59,7 @@ def search_arxiv(
                 topic,
                 paper.get('title', ''),
                 paper.get('abstract', ''),
+                aliases=alias_terms,
             )
             paper['relevance'] = rel
             paper['why_relevant'] = why
@@ -59,14 +72,17 @@ def search_arxiv(
     from_arxiv = from_date.replace('-', '') + "0000"
     to_arxiv = to_date.replace('-', '') + "2359"
 
-    # Quote multi-word topics for phrase matching
     topic_words = topic.strip().split()
-    if len(topic_words) > 1:
-        search_term = quote(f'"{topic}"')
-    else:
-        search_term = quote(topic)
 
-    query = f"all:{search_term}+AND+submittedDate:[{from_arxiv}+TO+{to_arxiv}]"
+    # OR the topic phrase with each alias phrase; parenthesize so the date
+    # clause applies to the whole group.
+    phrase_terms = [_arxiv_term(topic)] + [_arxiv_term(a) for a in alias_terms]
+    if len(phrase_terms) > 1:
+        search_term = "(" + "+OR+".join(phrase_terms) + ")"
+    else:
+        search_term = phrase_terms[0]
+
+    query = f"{search_term}+AND+submittedDate:[{from_arxiv}+TO+{to_arxiv}]"
 
     url = (
         f"http://export.arxiv.org/api/query"
@@ -79,10 +95,16 @@ def search_arxiv(
         xml_text = http.get_text(url, timeout=60)
         papers = xml_parse.parse_arxiv_atom(xml_text)
 
-        # Fallback: if quoted phrase returned nothing, retry with AND query
-        if not papers and len(topic_words) > 1:
-            and_terms = "+AND+".join(f"all:{quote(w)}" for w in topic_words)
-            fallback_query = f"{and_terms}+AND+submittedDate:[{from_arxiv}+TO+{to_arxiv}]"
+        # Fallback: if the phrase query returned nothing, retry splitting the
+        # topic into ANDed words, still OR'd with the alias phrases.
+        if not papers and (len(topic_words) > 1 or alias_terms):
+            topic_and = "+AND+".join(f"all:{quote(w)}" for w in topic_words)
+            fallback_terms = [f"({topic_and})"] + [_arxiv_term(a) for a in alias_terms]
+            fallback_search = (
+                "(" + "+OR+".join(fallback_terms) + ")"
+                if len(fallback_terms) > 1 else topic_and
+            )
+            fallback_query = f"{fallback_search}+AND+submittedDate:[{from_arxiv}+TO+{to_arxiv}]"
             fallback_url = (
                 f"http://export.arxiv.org/api/query"
                 f"?search_query={fallback_query}"
@@ -100,6 +122,7 @@ def search_arxiv(
                 topic,
                 paper.get('title', ''),
                 paper.get('abstract', ''),
+                aliases=alias_terms,
             )
             paper['relevance'] = rel
             paper['why_relevant'] = why

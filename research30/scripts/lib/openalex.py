@@ -151,6 +151,7 @@ def search_openalex(
     from_date: str,
     to_date: str,
     depth: str = "default",
+    aliases: Optional[List[str]] = None,
     mock_data: Optional[List[Dict[str, Any]]] = None,
     topic_ids: Optional[List[str]] = None,
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
@@ -159,12 +160,15 @@ def search_openalex(
     OpenAlex provides full-text search with relevance ranking,
     so results come back pre-sorted by relevance. We still apply
     our keyword relevance filter for consistency with other sources.
+    Aliases are not added to the OpenAlex query (its free-text search
+    does not take clean boolean OR) but do count toward relevance scoring.
 
     Args:
         topic: Search topic
         from_date: Start date (YYYY-MM-DD)
         to_date: End date (YYYY-MM-DD)
         depth: "quick", "default", or "deep"
+        aliases: Optional synonym phrases, used for relevance scoring
         mock_data: Optional mock data for testing (list of work dicts)
         topic_ids: Optional list of OpenAlex topic IDs (e.g. ["T11048"])
             to narrow results. Use discover_topics() to obtain these.
@@ -184,6 +188,7 @@ def search_openalex(
                 topic,
                 work.get('title', ''),
                 abstract,
+                aliases=aliases,
             )
             if rel > 0.1:
                 # Boost relevance based on API rank — OpenAlex returns
@@ -241,6 +246,7 @@ def search_openalex(
                     topic,
                     work.get('title', ''),
                     abstract,
+                    aliases=aliases,
                 )
                 if rel > 0.1:
                     # Boost relevance based on API rank — OpenAlex returns

@@ -75,13 +75,16 @@ def search_semantic_scholar(
     to_date: str,
     depth: str = "default",
     api_key: Optional[str] = None,
+    aliases: Optional[List[str]] = None,
     mock_data: Optional[List[Dict[str, Any]]] = None,
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """Search Semantic Scholar for papers matching topic in date range.
 
     S2 provides semantic search — understands conceptual similarity,
     not just keyword matching. We still apply our keyword relevance
-    filter for consistency with other sources.
+    filter for consistency with other sources. Aliases are not added to
+    the S2 query (its search is already semantic) but do count toward
+    relevance scoring.
 
     Args:
         topic: Search topic
@@ -89,6 +92,7 @@ def search_semantic_scholar(
         to_date: End date (YYYY-MM-DD)
         depth: "quick", "default", or "deep"
         api_key: Optional S2 API key for higher rate limits
+        aliases: Optional synonym phrases, used for relevance scoring
         mock_data: Optional mock data for testing (list of paper dicts)
 
     Returns:
@@ -103,6 +107,7 @@ def search_semantic_scholar(
                 topic,
                 paper.get('title', ''),
                 paper.get('abstract', ''),
+                aliases=aliases,
             )
             if rel > RELEVANCE_THRESHOLD:
                 # Boost relevance based on API rank — S2 uses semantic
@@ -168,6 +173,7 @@ def search_semantic_scholar(
                     topic,
                     paper.get('title', ''),
                     abstract,
+                    aliases=aliases,
                 )
                 if rel > RELEVANCE_THRESHOLD:
                     # Boost relevance based on API rank — S2 uses semantic

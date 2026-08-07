@@ -166,3 +166,27 @@ def test_build_query_multi_word():
     result = pubmed._build_query("CRISPR gene editing")
     expected = '("CRISPR gene editing"[TIAB] OR (CRISPR[TIAB] AND gene[TIAB] AND editing[TIAB]))'
     assert result == expected
+
+
+def test_build_query_no_aliases_unchanged():
+    """Passing no aliases must produce the same query as before."""
+    assert pubmed._build_query("virome", aliases=[]) == "virome[TIAB]"
+    assert pubmed._build_query("virome", aliases=None) == "virome[TIAB]"
+
+
+def test_build_query_with_aliases_ors_them():
+    """Aliases are OR'd with the topic so synonym-only papers are retrieved."""
+    result = pubmed._build_query("heart attack", aliases=["myocardial infarction", "MI"])
+    # Each phrase becomes its own TIAB subquery, joined by OR
+    assert result.startswith("(")
+    assert result.endswith(")")
+    assert " OR " in result
+    assert '"heart attack"[TIAB]' in result
+    assert '"myocardial infarction"[TIAB]' in result
+    assert "MI[TIAB]" in result  # single-word alias stays untagged-phrase form
+
+
+def test_build_query_blank_aliases_ignored():
+    """Blank alias entries do not add empty OR clauses."""
+    result = pubmed._build_query("virome", aliases=["  ", ""])
+    assert result == "virome[TIAB]"

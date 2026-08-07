@@ -16,11 +16,29 @@ Search multiple academic databases for recent scientific papers, preprints, mode
 
 **No API keys required.** Optionally set `S2_API_KEY` for Semantic Scholar and `NCBI_API_KEY` for faster PubMed.
 
-## Step 1: Run the research script
+## Step 1: Expand the topic into synonyms
+
+Before searching, generate 2-5 synonym phrases for the topic and pass them with
+`--aliases` (semicolon-separated). This is the one place your judgment improves
+recall: the keyword sources (PubMed, arXiv, bioRxiv, medRxiv) only return papers
+that use the exact terms searched, so a topic like "heart attack" misses every
+paper that says only "myocardial infarction."
+
+Rules for good aliases:
+- Use standard-terminology equivalents and common alternate phrasings: "heart attack" -> "myocardial infarction"; "gut bacteria" -> "gut microbiome, intestinal microbiota"; a gene's common name -> its official symbol.
+- Prefer multi-word phrases. Avoid short ambiguous acronyms unless they are unmistakable in the field (an alias like "MI" is filtered out by a word-boundary guard, but still adds noise).
+- Do not add broader or related concepts (that lowers precision). Aliases are restatements of the same thing, not neighbors.
+- If the topic has no good synonyms (a proper noun, a specific method name), skip `--aliases`.
+
+## Step 2: Run the research script
 
 ```bash
-python3 ~/.claude/skills/research30/scripts/research30.py "$TOPIC" --emit=compact 2>&1
+python3 ~/.claude/skills/research30/scripts/research30.py "$TOPIC" --aliases "synonym one; synonym two" --emit=compact 2>&1
 ```
+
+Aliases are OR'd into the query for the keyword sources and credited in relevance
+scoring for all sources. When an alias is what matched, the relevance explanation
+names it (e.g. "via alias 'myocardial infarction': ...").
 
 Depth options:
 - `--quick` - Top 10 results, faster
@@ -38,7 +56,7 @@ Source filtering:
 - `--sources=openalex` - OpenAlex only
 - `--sources=semanticscholar` - Semantic Scholar only
 
-## Step 2: Synthesize the results
+## Step 3: Synthesize the results
 
 The script outputs a **flat ranked list** sorted by score (0-100). Each item includes:
 - Score, title, source tag, date, URL
@@ -60,7 +78,7 @@ The script outputs a **flat ranked list** sorted by score (0-100). Each item inc
 
 4. **Note source diversity** — A finding reported across OpenAlex, PubMed, AND Semantic Scholar is higher confidence than one from a single source.
 
-## Step 3: Save the full synthesis to a file
+## Step 4: Save the full synthesis to a file
 
 **IMPORTANT:** Always save the full synthesis before showing anything to the user.
 
@@ -118,7 +136,7 @@ Key principles for synthesis:
 - **Prioritize by score but verify with abstracts.** A score of 85 means high relevance + recency + academic signal, but the abstract tells you *what* is relevant.
 - **Flag limitations.** If results are sparse or heavily weighted to one source, note this.
 
-## Step 4: Append to the research log
+## Step 5: Append to the research log
 
 Append a summary entry to `~/.local/share/research30/research-log.md`. This builds a cumulative research journal over time.
 
@@ -135,7 +153,7 @@ Use the Read tool to read the existing log (if it exists), then use the Write to
 **Report:** `~/.local/share/research30/reports/{slug}-{date}.md`
 ```
 
-## Step 5: Show a brief summary in chat
+## Step 6: Show a brief summary in chat
 
 Do NOT show the full synthesis in chat. Instead, show a **concise summary** with clear links to saved files:
 
@@ -160,7 +178,7 @@ Do NOT show the full synthesis in chat. Instead, show a **concise summary** with
 
 Always show all four file paths so the user knows exactly where to find everything.
 
-## Step 6: Offer follow-up actions
+## Step 7: Offer follow-up actions
 
 After the summary, ask what the user wants to do next:
 

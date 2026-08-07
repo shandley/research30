@@ -43,6 +43,7 @@ def search_pubmed(
     to_date: str,
     depth: str = "default",
     api_key: Optional[str] = None,
+    aliases: Optional[List[str]] = None,
     mock_esearch: Optional[dict] = None,
     mock_efetch: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
@@ -54,6 +55,7 @@ def search_pubmed(
         to_date: End date (YYYY-MM-DD)
         depth: "quick", "default", or "deep"
         api_key: Optional NCBI API key
+        aliases: Optional synonym phrases, OR'd into the query and scored
         mock_esearch: Optional mock ESearch JSON for testing
         mock_efetch: Optional mock EFetch XML for testing
 
@@ -70,7 +72,7 @@ def search_pubmed(
         pmids, query_translation = xml_parse.parse_pubmed_esearch(mock_esearch)
     else:
         try:
-            pmids, query_translation = _esearch(topic, max_results, api_key)
+            pmids, query_translation = _esearch(topic, max_results, api_key, aliases)
         except http.HTTPError as e:
             return [], str(e)
         except Exception as e:
@@ -106,6 +108,7 @@ def search_pubmed(
             topic,
             article.get('title', ''),
             article.get('abstract', ''),
+            aliases=aliases,
         )
         article['relevance'] = rel
         article['why_relevant'] = why
@@ -114,32 +117,42 @@ def search_pubmed(
     return articles, error
 
 
-def _build_query(topic: str) -> str:
-    """Build a TIAB-tagged PubMed query from a topic string.
+def _build_phrase_query(phrase: str) -> str:
+    """Build the TIAB subquery for a single phrase.
+
+    Single-word or known-phrase inputs produce: {phrase}[TIAB]
+    Multi-word inputs produce:
+        ("{phrase}"[TIAB] OR ({word1}[TIAB] AND {word2}[TIAB] AND ...))
+    """
+    words = phrase.split()
+    if len(words) <= 1 or phrase.lower() in _KNOWN_PHRASES:
+        return f'{phrase}[TIAB]'
+    and_part = ' AND '.join(f'{w}[TIAB]' for w in words)
+    return f'("{phrase}"[TIAB] OR ({and_part}))'
+
+
+def _build_query(topic: str, aliases: Optional[List[str]] = None) -> str:
+    """Build a TIAB-tagged PubMed query from a topic and optional aliases.
 
     Uses [TIAB] (Title/Abstract) field tags to avoid PubMed's Automatic
     Term Mapping which can misfire (e.g., "gut" matching the journal *Gut*).
-
-    Single-word or known-phrase topics produce: {topic}[TIAB]
-    Multi-word topics produce:
-        ("{topic}"[TIAB] OR ({word1}[TIAB] AND {word2}[TIAB] AND ...))
+    Aliases are OR'd with the topic so synonym-only papers are retrieved:
+        (<topic subquery> OR <alias1 subquery> OR ...)
     """
-    words = topic.split()
-    if len(words) <= 1 or topic.lower() in _KNOWN_PHRASES:
-        return f'{topic}[TIAB]'
-
-    # Multi-word: combine exact phrase with individual AND terms
-    and_part = ' AND '.join(f'{w}[TIAB]' for w in words)
-    return f'("{topic}"[TIAB] OR ({and_part}))'
+    phrases = [topic] + [a.strip() for a in (aliases or []) if a.strip()]
+    if len(phrases) == 1:
+        return _build_phrase_query(topic)
+    return '(' + ' OR '.join(_build_phrase_query(p) for p in phrases) + ')'
 
 
-def _esearch(topic: str, max_results: int, api_key: Optional[str] = None) -> Tuple[List[str], str]:
+def _esearch(topic: str, max_results: int, api_key: Optional[str] = None,
+             aliases: Optional[List[str]] = None) -> Tuple[List[str], str]:
     """Run ESearch to find PMIDs.
 
     Returns:
         Tuple of (list of PMID strings, querytranslation string).
     """
-    query = _build_query(topic)
+    query = _build_query(topic, aliases)
     encoded_query = quote(query)
     url = (
         f"{ESEARCH_BASE}"
